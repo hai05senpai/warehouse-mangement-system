@@ -32,7 +32,7 @@ Docker Compose tạo database `logistic_db` với user `logistic_user`, mật kh
 ### 2. Chạy backend
 
 ```powershell
-cd dbms-logistic\backend
+cd backend
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.jvmArguments=-Duser.timezone=UTC"
 ```
 
@@ -43,7 +43,7 @@ Backend chạy tại `http://localhost:8080`; API có tiền tố `/api`. Tùy c
 ### 3. Chạy frontend
 
 ```powershell
-cd dbms-logistic\frontend
+cd frontend
 npm install
 npm run dev
 ```
@@ -74,61 +74,6 @@ Chạy kiểm thử backend tại thư mục `backend` (cần PostgreSQL đang c
 - **Đơn xuất kho:** khóa dòng tồn khi giữ chỗ để chống xuất vượt tồn; hoàn tất để trừ tồn, hủy để giải phóng lượng giữ chỗ.
 - **Kiểm kê:** lập phiếu, tính chênh lệch với tồn hệ thống và xác nhận điều chỉnh.
 - **Báo cáo:** cảnh báo tồn thấp, hàng không có giao dịch xuất trong thời gian chọn, báo cáo nhập - xuất - tồn và truy vết lịch sử SKU.
-
-## API chính
-
-Các request JSON dùng `Content-Type: application/json`. CORS cho phép frontend chạy ở `localhost:5173` và `localhost:3000`.
-
-| Phương thức      | Endpoint                                          | Mô tả                                                   |
-| ------------------- | ------------------------------------------------- | --------------------------------------------------------- |
-| `GET`             | `/api/dashboard/summary`                        | Số liệu tổng quan                                      |
-| `GET`, `POST`   | `/api/products`                                 | Danh sách, thêm hàng hóa                              |
-| `PUT`, `DELETE` | `/api/products/{id}`                            | Sửa, xóa hàng hóa chưa được sử dụng             |
-| `GET`             | `/api/inventory?sku=&zone=&availableOnly=false` | Tra cứu tồn kho; mọi tham số lọc đều tùy chọn    |
-| `GET`             | `/api/locations`                                | Danh sách vị trí                                       |
-| `POST`            | `/api/transfers`                                | Điều chuyển hàng hóa                                 |
-| `GET`, `POST`   | `/api/receipt-orders`                           | Danh sách, tạo phiếu nhập                             |
-| `PUT`             | `/api/receipt-orders/{id}/complete`             | Hoàn tất phiếu nhập, cộng tồn kho                   |
-| `PUT`             | `/api/receipt-orders/{id}/cancel`               | Hủy phiếu nhập đang chờ                              |
-| `GET`, `POST`   | `/api/issue-orders`                             | Danh sách, tạo phiếu xuất và giữ chỗ tồn          |
-| `PUT`             | `/api/issue-orders/{id}/complete`               | Hoàn tất phiếu xuất, trừ tồn                        |
-| `PUT`             | `/api/issue-orders/{id}/cancel`                 | Hủy phiếu xuất và giải phóng tồn giữ chỗ         |
-| `GET`, `POST`   | `/api/stock-takes`                              | Danh sách, tạo phiếu kiểm kê                         |
-| `GET`             | `/api/stock-takes/{id}/items`                   | Chi tiết phiếu kiểm kê                                |
-| `GET`             | `/api/stock-takes/{id}/summary`                 | Tổng hợp số lượng và chênh lệch kiểm kê         |
-| `PUT`             | `/api/stock-takes/{id}/complete?approvedBy=...` | Xác nhận kiểm kê và điều chỉnh tồn               |
-| `GET`             | `/api/reports/low-stock`                        | Danh sách hàng tồn thấp                               |
-| `GET`             | `/api/reports/stagnant?days=90`                 | Hàng còn tồn, không xuất trong số ngày chỉ định |
-| `GET`             | `/api/reports/in-out?start=...&end=...`         | Báo cáo nhập - xuất - tồn; thời gian ISO-8601       |
-| `GET`             | `/api/products/{sku}/trace?start=...&end=...`   | Lịch sử giao dịch SKU; bộ lọc thời gian tùy chọn  |
-| `GET`             | `/api/suppliers`, `/api/customers`            | Dữ liệu nhà cung cấp, khách hàng cho biểu mẫu     |
-
-### Ví dụ request
-
-Tạo mặt hàng:
-
-```json
-{
-  "sku": "SP-001",
-  "name": "Sản phẩm mẫu",
-  "category": "Thiết bị",
-  "unit": "cái",
-  "minQuantity": 10
-}
-```
-
-Tạo phiếu xuất:
-
-```json
-{
-  "code": "PX-0001",
-  "customerId": 1,
-  "createdBy": "admin",
-  "items": [
-    { "productId": 1, "locationId": 1, "quantity": 2 }
-  ]
-}
-```
 
 ## Xử lý sự cố
 
