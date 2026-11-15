@@ -1,9 +1,61 @@
 import axios from 'axios'
 
+export type AdminUser = {
+  id: number
+  username: string
+  fullName: string
+  email?: string
+  phone?: string
+  role: string
+  active: boolean
+  lastLoginAt?: string
+  createdAt?: string
+}
+
+export type LoginResponse = {
+  token: string
+  admin: AdminUser
+}
+
+const TOKEN_KEY = 'stockroom_auth_token'
+const ADMIN_KEY = 'stockroom_auth_admin'
+
+export function getStoredToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function getStoredAdmin(): AdminUser | null {
+  const raw = localStorage.getItem(ADMIN_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as AdminUser
+  } catch {
+    return null
+  }
+}
+
+export function setStoredAuth(token: string, admin: AdminUser): void {
+  localStorage.setItem(TOKEN_KEY, token)
+  localStorage.setItem(ADMIN_KEY, JSON.stringify(admin))
+}
+
+export function clearStoredAuth(): void {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(ADMIN_KEY)
+}
+
 export const api = axios.create({
   baseURL: 'http://localhost:8080/api',
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
+})
+
+api.interceptors.request.use((config) => {
+  const token = getStoredToken()
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
 })
 
 export function errorMessage(error: unknown): string {
@@ -15,6 +67,12 @@ export function errorMessage(error: unknown): string {
     const translations: Record<string, string> = {
       'Network Error': 'Không thể kết nối máy chủ. Hãy kiểm tra backend và thử lại.',
       'Request failed with status code 500': 'Máy chủ gặp lỗi khi xử lý yêu cầu. Vui lòng kiểm tra log backend.',
+      'Username and password are required': 'Vui lòng nhập tên đăng nhập và mật khẩu.',
+      'Invalid username or password': 'Tên đăng nhập hoặc mật khẩu không chính xác.',
+      'Admin account is disabled': 'Tài khoản quản trị viên này đã bị vô hiệu hóa.',
+      'Authentication required': 'Vui lòng đăng nhập để tiếp tục.',
+      'Invalid or expired session': 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.',
+      'Admin not found': 'Không tìm thấy tài khoản quản trị viên.',
       'Product not found': 'Không tìm thấy hàng hóa.',
       'Location not found': 'Không tìm thấy vị trí kho.',
       'Supplier not found': 'Không tìm thấy nhà cung cấp.',

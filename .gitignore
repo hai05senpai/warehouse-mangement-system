@@ -1,0 +1,17 @@
+# Environment variables (không push mật khẩu cá nhân lên Git)
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Build outputs & dependencies
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+# IDE & OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

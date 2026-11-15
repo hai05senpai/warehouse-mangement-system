@@ -1,25 +1,34 @@
 spring:
   application:
-    name: backend
+    name: ${SPRING_APPLICATION_NAME:backend}
+
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/logistic_db
-    username: logistic_user
-    password: logistic_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:logistic_db}}
+    username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:logistic_user}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:}}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${SPRING_JPA_SHOW_SQL:true}
     properties:
       hibernate:
-        "[format_sql]": true
+        "[format_sql]": ${SPRING_JPA_FORMAT_SQL:true}
         jdbc:
-          "[time_zone]": UTC
+          "[time_zone]": ${APP_TIMEZONE:UTC}
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      timeout: 2000ms
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      timeout: ${SPRING_DATA_REDIS_TIMEOUT:2000ms}
+
+server:
+  port: ${SERVER_PORT:8080}
