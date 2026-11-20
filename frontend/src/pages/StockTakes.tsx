@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Check, ClipboardCheck, Eye, Plus, X } from 'lucide-react'
-import { api, errorMessage, type Row } from '../api'
+import { Check, ClipboardCheck, Eye, Plus, Trash2, X } from 'lucide-react'
+import { api, errorMessage, getStoredAdmin, type Row } from '../api'
 import { DataTable } from '../components/DataTable'
 import { Field, Notice, Page, Panel } from '../components/Page'
 
 type Ref = { id: number; sku?: string; name?: string; code?: string; zone?: string }
+type StockTakeLine = { productId: string; locationId: string; actualQty: string }
 type StockTakeItemRow = {
   id: number
   product?: Ref
@@ -20,11 +21,15 @@ type StockTakeSummary = {
   difference: number
 }
 
+const emptyLine = (): StockTakeLine => ({ productId: '', locationId: '', actualQty: '0' })
+
 export function StockTakes() {
+  const admin = getStoredAdmin()
   const [takes, setTakes] = useState<Row[]>([])
   const [products, setProducts] = useState<Ref[]>([])
   const [locations, setLocations] = useState<Ref[]>([])
-  const [form, setForm] = useState({ code: '', createdBy: 'Admin user', productId: '', locationId: '', actualQty: '0' })
+  const [code, setCode] = useState('')
+  const [items, setItems] = useState<StockTakeLine[]>([emptyLine()])
   const [selectedTake, setSelectedTake] = useState<Row | null>(null)
   const [detailItems, setDetailItems] = useState<Row[]>([])
   const [summary, setSummary] = useState<StockTakeSummary | null>(null)
@@ -40,6 +45,19 @@ export function StockTakes() {
       .then(([p, l]) => { setProducts(p.data); setLocations(l.data) })
       .catch((reason: unknown) => setError(errorMessage(reason)))
   }, [load])
+
+  function updateLine(index: number, patch: Partial<StockTakeLine>) {
+    setItems((prev) => prev.map((line, i) => (i === index ? { ...line, ...patch } : line)))
+  }
+
+  function addLine() {
+    setItems((prev) => [...prev, emptyLine()])
+  }
+
+  function removeLine(index: number) {
+    if (items.length <= 1) return
+    setItems((prev) => prev.filter((_, i) => i !== index))
+  }
 
   async function viewDetails(take: Row) {
     setError('')
@@ -71,12 +89,17 @@ export function StockTakes() {
     event.preventDefault(); setError(''); setMessage('')
     try {
       const res = await api.post<Row>('/stock-takes', {
-        code: form.code,
-        createdBy: form.createdBy,
-        items: [{ productId: Number(form.productId), locationId: Number(form.locationId), actualQty: Number(form.actualQty) }],
+        code: code.trim(),
+        createdBy: admin?.fullName || admin?.username || 'Admin user',
+        items: items.map((line) => ({
+          productId: Number(line.productId),
+          locationId: Number(line.locationId),
+          actualQty: Number(line.actualQty),
+        })),
       })
-      setMessage('Đã lưu phiếu kiểm kê ở trạng thái bản nháp. Xác nhận hoàn tất để điều chỉnh tồn kho.')
-      setForm({ ...form, code: '', productId: '', locationId: '', actualQty: '0' })
+      setMessage(`Đã lưu phiếu kiểm kê (${items.length} mặt hàng) ở trạng thái bản nháp. Xác nhận hoàn tất để điều chỉnh tồn kho.`)
+      setCode('')
+      setItems([emptyLine()])
       await load()
       await viewDetails(res.data)
     } catch (reason) { setError(errorMessage(reason)) }
@@ -85,7 +108,9 @@ export function StockTakes() {
   async function complete(id: number) {
     setError(''); setMessage('')
     try {
-      const res = await api.put<Row>(`/stock-takes/${id}/complete`, null, { params: { approvedBy: 'Quản trị viên' } })
+      const res = await api.put<Row>(`/stock-takes/${id}/complete`, null, {
+        params: { approvedBy: admin?.fullName || admin?.username || 'Quản trị viên' },
+      })
       setMessage('Đã áp dụng điều chỉnh theo kết quả kiểm kê.')
       await load()
       if (selectedTake && Number(selectedTake.id) === id) {
@@ -96,13 +121,52 @@ export function StockTakes() {
 
   return <Page eyebrow="KIỂM SOÁT TỒN KHO" title="Kiểm kê kho" description="Đối chiếu số lượng thực tế với số liệu hệ thống và xác nhận điều chỉnh.">
     {(error || message) && <Notice message={error || message} kind={error ? 'error' : 'success'} />}
-    <Panel title="Ghi nhận số lượng kiểm kê" subtitle="Lưu số tồn hệ thống và tự động tính chênh lệch cần điều chỉnh">
-      <form className="filter-bar" onSubmit={(event) => void submit(event)}>
-        <Field label="Mã phiếu kiểm kê"><input required value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder="KK-0001" /></Field>
-        <Field label="Hàng hóa"><select required value={form.productId} onChange={(event) => setForm({ ...form, productId: event.target.value })}><option value="">Chọn hàng hóa</option>{products.map((product) => <option key={product.id} value={product.id}>{product.sku} — {product.name}</option>)}</select></Field>
-        <Field label="Vị trí"><select required value={form.locationId} onChange={(event) => setForm({ ...form, locationId: event.target.value })}><option value="">Chọn vị trí</option>{locations.map((location) => <option key={location.id} value={location.id}>{location.code}</option>)}</select></Field>
-        <Field label="Số lượng thực tế"><input required type="number" min="0" value={form.actualQty} onChange={(event) => setForm({ ...form, actualQty: event.target.value })} /></Field>
-        <button className="button button-primary" type="submit"><Plus size={16} />Lưu kết quả</button>
+    <Panel title="Ghi nhận số lượng kiểm kê" subtitle="Một phiếu kiểm kê (StockTake) hỗ trợ kiểm đếm nhiều mặt hàng (StockTakeItem) và tự động tổng hợp chênh lệch">
+      <form className="form-stack" onSubmit={(event) => void submit(event)}>
+        <div className="filter-bar" style={{ marginBottom: 0 }}>
+          <Field label="Mã phiếu kiểm kê">
+            <input required value={code} onChange={(event) => setCode(event.target.value)} placeholder="KK-0001" />
+          </Field>
+        </div>
+
+        {items.map((line, index) => (
+          <div className="filter-bar" key={index} style={{ marginBottom: 0 }}>
+            <Field label={index === 0 ? 'Hàng hóa' : `Hàng hóa #${index + 1}`}>
+              <select required value={line.productId} onChange={(event) => updateLine(index, { productId: event.target.value })}>
+                <option value="">Chọn hàng hóa</option>
+                {products.map((product) => <option key={product.id} value={product.id}>{product.sku} — {product.name}</option>)}
+              </select>
+            </Field>
+            <Field label="Vị trí">
+              <select required value={line.locationId} onChange={(event) => updateLine(index, { locationId: event.target.value })}>
+                <option value="">Chọn vị trí</option>
+                {locations.map((location) => <option key={location.id} value={location.id}>{location.code}</option>)}
+              </select>
+            </Field>
+            <Field label="Số lượng thực tế">
+              <input required type="number" min="0" value={line.actualQty} onChange={(event) => updateLine(index, { actualQty: event.target.value })} />
+            </Field>
+            <button
+              type="button"
+              className="icon-button danger-icon"
+              disabled={items.length <= 1}
+              title="Xóa dòng kiểm kê"
+              aria-label="Xóa dòng kiểm kê"
+              onClick={() => removeLine(index)}
+            >
+              <Trash2 size={15} />
+            </button>
+          </div>
+        ))}
+
+        <div className="form-actions" style={{ justifyContent: 'space-between' }}>
+          <button type="button" className="button button-secondary" onClick={addLine}>
+            <Plus size={15} /> Thêm dòng kiểm kê
+          </button>
+          <button className="button button-primary" type="submit">
+            <Plus size={16} /> Lưu kết quả ({items.length} dòng)
+          </button>
+        </div>
       </form>
     </Panel>
 
