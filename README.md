@@ -47,6 +47,7 @@ Tại thư mục gốc `dbms-logistic`, sao chép tệp `.env.example` thành `.
   ```
 
 > **Lưu ý:** Tệp `.env` chứa thông tin kết nối cơ sở dữ liệu (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_*`) và Redis. Khi chạy `application.yaml`, Spring Boot sẽ tự động nạp tệp `.env` ở thư mục gốc.
+>
 > - Nếu dùng **Docker Compose**, giữ nguyên các giá trị mặc định trong `.env.example` (`logistic_user` / `logistic_password`).
 > - Nếu dùng **PostgreSQL cài trực tiếp trên máy**, hãy chỉnh lại `POSTGRES_USER`, `POSTGRES_PASSWORD`, `SPRING_DATASOURCE_USERNAME` và `SPRING_DATASOURCE_PASSWORD` trong `.env` theo tài khoản local của bạn.
 
@@ -59,6 +60,7 @@ docker compose up -d
 ```
 
 Lệnh này khởi tạo:
+
 - **PostgreSQL 17** (`logistic-postgres`) tại cổng `5432` — database `logistic_db`, user `logistic_user`, mật khẩu `logistic_password`.
 - **Redis 7** (`logistic-redis`) tại cổng `6379`.
 
@@ -73,16 +75,17 @@ docker compose ps
 Mở cửa sổ terminal tại thư mục gốc và di chuyển vào `backend`:
 
 - **Windows (PowerShell):**
+
   ```powershell
   cd backend
   .\mvnw.cmd spring-boot:run "-Dspring-boot.run.jvmArguments=-Duser.timezone=UTC"
   ```
 - **macOS / Linux (Bash):**
+
   ```bash
   cd backend
   ./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Duser.timezone=UTC"
   ```
-
 - Backend chạy tại `http://localhost:8080` (các endpoint API có tiền tố `/api`).
 - Tùy chọn `-Duser.timezone=UTC` đảm bảo múi giờ chuẩn cho kết nối JDBC/PostgreSQL trên Windows.
 - Trong lần chạy đầu tiên, Hibernate (`ddl-auto=update`) sẽ tự động tạo bảng và `AdminDataInitializer` sẽ tự tạo các tài khoản quản trị mặc định.
@@ -93,21 +96,21 @@ Các script dữ liệu mẫu trong `backend/src/main/resources/data/` (`01_supp
 
 - **Trên Windows PowerShell (khi dùng Docker PostgreSQL):**
   Chạy tại thư mục gốc `dbms-logistic`:
+
   ```powershell
   Get-ChildItem backend/src/main/resources/data/*.sql | Sort-Object Name | ForEach-Object {
       Write-Host "Đang nạp $($_.Name)..."
       Get-Content $_.FullName -Raw -Encoding UTF8 | docker exec -i logistic-postgres psql -U logistic_user -d logistic_db
   }
   ```
-
 - **Trên macOS / Linux (khi dùng Docker PostgreSQL):**
+
   ```bash
   for f in backend/src/main/resources/data/*.sql; do
       echo "Đang nạp $f..."
       docker exec -i logistic-postgres psql -U logistic_user -d logistic_db < "$f"
   done
   ```
-
 - **Nếu dùng công cụ quản trị DB (DBeaver, pgAdmin, DataGrip):**
   Mở và chạy lần lượt các tệp trong `backend/src/main/resources/data/` theo đúng thứ tự số thứ tự từ `01_suppliers.sql` đến `12_admins.sql`.
 
@@ -129,23 +132,24 @@ Mở trình duyệt tại địa chỉ Vite hiển thị (mặc định là `htt
 
 Khi khởi chạy Backend lần đầu, hệ thống tự động khởi tạo sẵn tài khoản quản trị:
 
-| Tên đăng nhập | Mật khẩu | Vai trò | Ghi chú |
-| :--- | :--- | :--- | :--- |
-| `admin` | `admin123` | `SUPER_ADMIN` | Tự động tạo khi khởi chạy backend |
-| `manager` | `admin123` | `WAREHOUSE_MANAGER` | Tự động tạo khi khởi chạy backend |
-| `staff01` | `admin123` | `STAFF` | Có thêm khi nạp `12_admins.sql` |
+| Tên đăng nhập | Mật khẩu   | Vai trò              | Ghi chú                                |
+| :---------------- | :----------- | :-------------------- | :-------------------------------------- |
+| `admin`         | `admin123` | `SUPER_ADMIN`       | Tự động tạo khi khởi chạy backend |
+| `manager`       | `admin123` | `WAREHOUSE_MANAGER` | Tự động tạo khi khởi chạy backend |
+| `staff01`       | `admin123` | `STAFF`             | Có thêm khi nạp `12_admins.sql`    |
 
 ---
 
 ## Kiểm tra chất lượng & Kiểm thử
 
 - **Kiểm tra build và lint Frontend** (chạy tại thư mục `frontend`):
+
   ```powershell
   npm run build
   npm run lint
   ```
-
 - **Chạy kiểm thử Backend** (chạy tại thư mục `backend`, yêu cầu PostgreSQL đang hoạt động và đã có tệp `.env`):
+
   ```powershell
   .\mvnw.cmd test "-Duser.timezone=UTC"
   ```
