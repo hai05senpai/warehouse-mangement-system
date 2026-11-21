@@ -24,11 +24,13 @@ function display(value: unknown): string {
   return String(value)
 }
 
-export function DataTable({ rows, empty = 'No records found', searchable = true, actions }: {
+export function DataTable({ rows, empty = 'No records found', searchable = true, actions, onRowClick, selectedRowId }: {
   rows: Row[]
   empty?: string
   searchable?: boolean
   actions?: (row: Row) => ReactNode
+  onRowClick?: (row: Row) => void
+  selectedRowId?: number | string | null
 }) {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(0)
@@ -74,8 +76,14 @@ export function DataTable({ rows, empty = 'No records found', searchable = true,
         <table>
           <thead><tr>{columns.map((column) => <th key={column}>{headings[column] ?? column.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())}</th>)}{actions && <th>Thao tác</th>}</tr></thead>
           <tbody>
-            {visible.map((row, index) => (
-              <tr key={String(row.id ?? index)}>
+            {visible.map((row, index) => {
+              const isSelected = selectedRowId !== undefined && selectedRowId !== null && String(row.id) === String(selectedRowId)
+              return (
+              <tr
+                key={String(row.id ?? index)}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                style={onRowClick ? { cursor: 'pointer', background: isSelected ? '#eaf5ef' : undefined } : undefined}
+              >
                 {columns.map((column) => {
                   const value = row[column]
                   const isStatus = column.toLowerCase() === 'status'
@@ -86,9 +94,10 @@ export function DataTable({ rows, empty = 'No records found', searchable = true,
                     ? <span className={`badge ${statusClass ? `badge-${statusClass}` : ''}`}>{display(value)}</span>
                     : display(value)}</td>
                 })}
-                {actions && <td className="action-cell">{actions(row)}</td>}
+                {actions && <td className="action-cell" onClick={(event) => event.stopPropagation()}>{actions(row)}</td>}
               </tr>
-            ))}
+              )
+            })}
             {visible.length === 0 && <tr><td className="empty-cell" colSpan={Math.max(columns.length + (actions ? 1 : 0), 1)}>{translatedEmpty}</td></tr>}
           </tbody>
         </table>

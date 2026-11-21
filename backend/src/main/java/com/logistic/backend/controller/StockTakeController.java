@@ -43,4 +43,9 @@ public class StockTakeController {
         StockTake stockTake = stockTakeService.completeStockTake(id, approvedBy);
         return ResponseEntity.ok(stockTake);
     }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<StockTake> cancelStockTake(@PathVariable Long id) {
+        return ResponseEntity.ok(stockTakeService.cancelStockTake(id));
+    }
 }

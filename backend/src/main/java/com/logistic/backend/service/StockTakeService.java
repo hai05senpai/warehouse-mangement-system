@@ -141,6 +141,26 @@ public class StockTakeService {
         }
     }
 
+    @Transactional
+    public StockTake cancelStockTake(Long stockTakeId) {
+        String lockToken = UUID.randomUUID().toString();
+        List<String> acquiredKeys = acquireRedisLocks(List.of("lock:stock-take:" + stockTakeId), lockToken);
+
+        try {
+            StockTake stockTake = stockTakeRepository.findByIdWithLock(stockTakeId)
+                    .orElseThrow(() -> new IllegalArgumentException("Stock take order not found"));
+
+            if (!"DRAFT".equals(stockTake.getStatus())) {
+                throw new IllegalStateException("Only DRAFT stock take orders can be cancelled");
+            }
+
+            stockTake.setStatus("CANCELLED");
+            return stockTakeRepository.save(stockTake);
+        } finally {
+            releaseRedisLocks(acquiredKeys, lockToken);
+        }
+    }
+
     public List<StockTake> list() {
         return stockTakeRepository.findAllByOrderByStockTakeDateDesc();
     }

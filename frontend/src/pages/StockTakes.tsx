@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Check, ClipboardCheck, Eye, Plus, Trash2, X } from 'lucide-react'
+import { Check, ClipboardCheck, Plus, Trash2, X } from 'lucide-react'
 import { api, errorMessage, getStoredAdmin, type Row } from '../api'
 import { DataTable } from '../components/DataTable'
 import { Field, Notice, Page, Panel } from '../components/Page'
@@ -105,13 +105,15 @@ export function StockTakes() {
     } catch (reason) { setError(errorMessage(reason)) }
   }
 
-  async function complete(id: number) {
+  async function changeStatus(id: number, action: 'complete' | 'cancel') {
     setError(''); setMessage('')
     try {
-      const res = await api.put<Row>(`/stock-takes/${id}/complete`, null, {
-        params: { approvedBy: admin?.fullName || admin?.username || 'Quản trị viên' },
-      })
-      setMessage('Đã áp dụng điều chỉnh theo kết quả kiểm kê.')
+      const res = action === 'complete'
+        ? await api.put<Row>(`/stock-takes/${id}/complete`, null, {
+            params: { approvedBy: admin?.fullName || admin?.username || 'Quản trị viên' },
+          })
+        : await api.put<Row>(`/stock-takes/${id}/cancel`)
+      setMessage(action === 'complete' ? 'Đã áp dụng điều chỉnh theo kết quả kiểm kê.' : 'Đã hủy phiếu kiểm kê.')
       await load()
       if (selectedTake && Number(selectedTake.id) === id) {
         await viewDetails(res.data)
@@ -177,9 +179,14 @@ export function StockTakes() {
         action={
           <div className="inline-actions">
             {selectedTake.status === 'DRAFT' && (
-              <button className="button button-primary" type="button" onClick={() => void complete(Number(selectedTake.id))}>
-                <Check size={15} /> Duyệt & Điều chỉnh tồn kho
-              </button>
+              <>
+                <button className="button button-primary" type="button" onClick={() => void changeStatus(Number(selectedTake.id), 'complete')}>
+                  <Check size={15} /> Duyệt & Điều chỉnh tồn kho
+                </button>
+                <button className="button button-secondary" type="button" onClick={() => void changeStatus(Number(selectedTake.id), 'cancel')}>
+                  <X size={15} /> Hủy phiếu
+                </button>
+              </>
             )}
             <button className="icon-button" type="button" aria-label="Đóng chi tiết" onClick={() => { setSelectedTake(null); setSummary(null) }}>
               <X size={16} />
@@ -205,31 +212,31 @@ export function StockTakes() {
       </Panel>
     )}
 
-    <Panel title="Danh sách phiếu kiểm kê" subtitle={`${takes.length} phiếu kiểm kê`}>
+    <Panel title="Danh sách phiếu kiểm kê" subtitle="Nhấp vào một dòng phiếu kiểm kê để xem chi tiết các mặt hàng (StockTakeItem) và tổng hợp chênh lệch">
       <DataTable
         rows={takes}
-        actions={(take) => (
+        selectedRowId={selectedTake?.id}
+        onRowClick={(row) => void viewDetails(row)}
+        actions={(take) => take.status === 'DRAFT' ? (
           <div className="inline-actions">
             <button
-              className="icon-button"
-              title="Xem chi tiết đối chiếu & chênh lệch"
-              aria-label="Xem chi tiết kiểm kê"
-              onClick={() => void viewDetails(take)}
+              className="icon-button success-icon"
+              title="Duyệt kiểm kê (Approve)"
+              aria-label="Xác nhận kiểm kê"
+              onClick={() => void changeStatus(Number(take.id), 'complete')}
             >
-              <Eye size={16} />
+              <Check size={16} />
             </button>
-            {take.status === 'DRAFT' && (
-              <button
-                className="icon-button success-icon"
-                title="Xác nhận duyệt kiểm kê"
-                aria-label="Xác nhận kiểm kê"
-                onClick={() => void complete(Number(take.id))}
-              >
-                <Check size={16} />
-              </button>
-            )}
+            <button
+              className="icon-button danger-icon"
+              title="Hủy phiếu kiểm kê (Disapprove)"
+              aria-label="Hủy phiếu kiểm kê"
+              onClick={() => void changeStatus(Number(take.id), 'cancel')}
+            >
+              <X size={16} />
+            </button>
           </div>
-        )}
+        ) : null}
       />
       {!takes.length && <div className="panel-empty"><ClipboardCheck size={17} />Chưa có phiếu kiểm kê nào.</div>}
     </Panel>
