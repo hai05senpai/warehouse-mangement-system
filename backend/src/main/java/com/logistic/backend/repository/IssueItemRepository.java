@@ -13,4 +13,7 @@ public interface IssueItemRepository extends JpaRepository<IssueItem, Long> {
     List<IssueItem> findByIssueOrderId(Long issueOrderId);
     @Query("select i from IssueItem i where i.issueOrder.id = :id order by i.product.id, i.location.id")
     List<IssueItem> findOrderedByIssueOrderId(@Param("id") Long issueOrderId);
+
+    @Query("SELECT i FROM IssueItem i JOIN FETCH i.issueOrder io JOIN FETCH io.customer JOIN FETCH i.product JOIN FETCH i.location WHERE io.id = :id ORDER BY i.product.sku, i.location.code")
+    List<IssueItem> findDetailsByIssueOrderId(@Param("id") Long issueOrderId);
 }

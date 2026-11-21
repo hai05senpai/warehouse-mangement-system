@@ -4,8 +4,14 @@ import { api, errorMessage, getStoredAdmin, type Row } from '../api'
 import { DataTable } from '../components/DataTable'
 import { Field, Notice, Page, Panel } from '../components/Page'
 
-type Ref = { id: number; sku?: string; name?: string; code?: string; product?: Ref; location?: Ref }
+type Ref = { id: number; sku?: string; name?: string; code?: string; zone?: string }
 type IssueLine = { productId: string; locationId: string; quantity: string }
+type IssueItemRow = {
+  id: number
+  product?: Ref
+  location?: Ref
+  quantity: number
+}
 
 const emptyLine = (): IssueLine => ({ productId: '', locationId: '', quantity: '1' })
 
@@ -18,6 +24,8 @@ export function Issues() {
   const [code, setCode] = useState('')
   const [customerId, setCustomerId] = useState('')
   const [items, setItems] = useState<IssueLine[]>([emptyLine()])
+  const [selectedOrder, setSelectedOrder] = useState<Row | null>(null)
+  const [detailItems, setDetailItems] = useState<Row[]>([])
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -44,10 +52,31 @@ export function Issues() {
     setItems((prev) => prev.filter((_, i) => i !== index))
   }
 
+  async function viewDetails(order: Row) {
+    setError('')
+    try {
+      const id = Number(order.id)
+      const res = await api.get<IssueItemRow[]>(`/issue-orders/${id}/items`)
+      setSelectedOrder(order)
+      setDetailItems(
+        res.data.map((item) => ({
+          id: item.id,
+          sku: item.product?.sku ?? '—',
+          productName: item.product?.name ?? '—',
+          location: item.location?.code ?? '—',
+          zone: item.location?.zone ?? '—',
+          quantity: item.quantity,
+        }))
+      )
+    } catch (reason) {
+      setError(errorMessage(reason))
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setMessage('')
     try {
-      await api.post('/issue-orders', {
+      const res = await api.post<Row>('/issue-orders', {
         code: code.trim(),
         customerId: Number(customerId),
         createdBy: admin?.fullName || admin?.username || 'Quản trị viên',
@@ -62,15 +91,19 @@ export function Issues() {
       setCustomerId('')
       setItems([emptyLine()])
       await load()
+      await viewDetails(res.data)
     } catch (reason) { setError(errorMessage(reason)) }
   }
 
   async function changeStatus(id: number, action: 'complete' | 'cancel') {
     setError(''); setMessage('')
     try {
-      await api.put(`/issue-orders/${id}/${action}`)
+      const res = await api.put<Row>(`/issue-orders/${id}/${action}`)
       setMessage(`Đã ${action === 'complete' ? 'hoàn tất' : 'hủy'} phiếu xuất và cập nhật lượng hàng giữ chỗ.`)
       await load()
+      if (selectedOrder && Number(selectedOrder.id) === id) {
+        await viewDetails(res.data)
+      }
     } catch (reason) { setError(errorMessage(reason)) }
   }
 
@@ -138,11 +171,43 @@ export function Issues() {
         </div>
       </form>
     </Panel>
-    <Panel title="Danh sách phiếu xuất" subtitle="Các yêu cầu đồng thời được bảo vệ bằng Redis Distributed Lock và khóa dòng PostgreSQL">
-      <DataTable rows={concurrencyRows} actions={(order) => order.status === 'PENDING' ? <div className="inline-actions">
-        <button className="icon-button success-icon" aria-label="Hoàn tất phiếu xuất" onClick={() => void changeStatus(Number(order.id), 'complete')}><Check size={16} /></button>
-        <button className="icon-button danger-icon" aria-label="Hủy phiếu xuất" onClick={() => void changeStatus(Number(order.id), 'cancel')}><X size={16} /></button>
-      </div> : null} />
+
+    {selectedOrder && (
+      <Panel
+        title={`Chi tiết phiếu xuất: ${String(selectedOrder.code)}`}
+        subtitle={`Danh sách ${detailItems.length} mặt hàng (IssueItem) thuộc phiếu xuất này`}
+        action={
+          <div className="inline-actions">
+            {selectedOrder.status === 'PENDING' && (
+              <>
+                <button className="button button-primary" type="button" onClick={() => void changeStatus(Number(selectedOrder.id), 'complete')}>
+                  <Check size={15} /> Hoàn tất xuất kho
+                </button>
+                <button className="button button-secondary" type="button" onClick={() => void changeStatus(Number(selectedOrder.id), 'cancel')}>
+                  <X size={15} /> Hủy phiếu
+                </button>
+              </>
+            )}
+            <button className="icon-button" type="button" aria-label="Đóng chi tiết" onClick={() => setSelectedOrder(null)}>
+              <X size={16} />
+            </button>
+          </div>
+        }
+      >
+        <DataTable searchable={false} rows={detailItems} empty="Phiếu xuất chưa có dòng mặt hàng nào." />
+      </Panel>
+    )}
+
+    <Panel title="Danh sách phiếu xuất" subtitle="Nhấp vào một dòng phiếu xuất để xem chi tiết các mặt hàng (IssueItem)">
+      <DataTable
+        rows={concurrencyRows}
+        selectedRowId={selectedOrder?.id}
+        onRowClick={(row) => void viewDetails(row)}
+        actions={(order) => order.status === 'PENDING' ? <div className="inline-actions">
+          <button className="icon-button success-icon" title="Hoàn tất phiếu xuất (Approve)" aria-label="Hoàn tất phiếu xuất" onClick={() => void changeStatus(Number(order.id), 'complete')}><Check size={16} /></button>
+          <button className="icon-button danger-icon" title="Hủy phiếu xuất (Disapprove)" aria-label="Hủy phiếu xuất" onClick={() => void changeStatus(Number(order.id), 'cancel')}><X size={16} /></button>
+        </div> : null}
+      />
       {!orders.length && <div className="panel-empty"><Truck size={17} />Chưa có phiếu xuất kho nào.</div>}
     </Panel>
   </Page>

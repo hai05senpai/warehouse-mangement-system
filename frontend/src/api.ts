@@ -86,6 +86,7 @@ export function errorMessage(error: unknown): string {
       'Only pending receipt orders can be cancelled': 'Chỉ có thể hủy phiếu nhập đang chờ xử lý.',
       'Only pending issue orders can be cancelled': 'Chỉ có thể hủy phiếu xuất đang chờ xử lý.',
       'Only DRAFT stock take orders can be completed': 'Chỉ có thể hoàn tất phiếu kiểm kê ở trạng thái bản nháp.',
+      'Only DRAFT stock take orders can be cancelled': 'Chỉ có thể hủy phiếu kiểm kê ở trạng thái bản nháp.',
       'SKU already exists': 'Mã SKU đã tồn tại.',
       'Product has inventory or transaction history and cannot be deleted': 'Không thể xóa hàng hóa đã có tồn kho hoặc lịch sử giao dịch.',
       'Order code and at least one item are required': 'Vui lòng nhập mã phiếu và ít nhất một mặt hàng.',
