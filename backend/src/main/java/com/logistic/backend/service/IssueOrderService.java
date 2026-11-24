@@ -1,5 +1,7 @@
 package com.logistic.backend.service;
 
+import com.logistic.backend.config.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import com.logistic.backend.dto.CreateIssueOrderRequest;
 import com.logistic.backend.dto.IssueItemRequest;
 import com.logistic.backend.entity.*;
@@ -46,6 +48,7 @@ public class IssueOrderService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public IssueOrder createIssueOrder(CreateIssueOrderRequest request) {
         if (request == null || request.getCode() == null || request.getCode().isBlank()
                 || request.getCustomerId() == null || request.getItems() == null || request.getItems().isEmpty()) {
@@ -118,6 +121,7 @@ public class IssueOrderService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public IssueOrder completeIssueOrder(Long id) {
         String lockToken = UUID.randomUUID().toString();
         List<String> acquiredKeys = acquireRedisLocks(List.of("lock:issue-order:" + id), lockToken);
@@ -158,6 +162,7 @@ public class IssueOrderService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public IssueOrder cancelIssueOrder(Long id) {
         String lockToken = UUID.randomUUID().toString();
         List<String> acquiredKeys = acquireRedisLocks(List.of("lock:issue-order:" + id), lockToken);

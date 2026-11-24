@@ -1,6 +1,5 @@
 package com.logistic.backend.controller;
 
-import com.logistic.backend.repository.InventoryRepository;
 import com.logistic.backend.repository.ReportRepository;
 import com.logistic.backend.service.ReportService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,7 +19,7 @@ public class ReportController {
     public Map<String, Object> summary() { return service.summary(); }
 
     @GetMapping("/reports/low-stock")
-    public List<InventoryRepository.LowStockRow> lowStock() { return service.lowStock(); }
+    public List<ReportService.LowStockItem> lowStock() { return service.lowStock(); }
 
     @GetMapping("/reports/stagnant")
     public List<ReportRepository.StagnantRow> stagnant(@RequestParam(defaultValue = "90") int days) {

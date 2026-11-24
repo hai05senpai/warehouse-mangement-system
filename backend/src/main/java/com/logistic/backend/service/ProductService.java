@@ -1,5 +1,7 @@
 package com.logistic.backend.service;
 
+import com.logistic.backend.config.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import com.logistic.backend.dto.ProductRequest;
 import com.logistic.backend.entity.Product;
 import com.logistic.backend.repository.ProductRepository;
@@ -21,6 +23,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public Product create(ProductRequest request) {
         validate(request);
         if (products.findBySku(request.sku().trim()).isPresent()) {
@@ -30,6 +33,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public Product update(Long id, ProductRequest request) {
         validate(request);
         Product product = products.findById(id).orElseThrow(() -> new IllegalArgumentException("Product not found"));
@@ -39,6 +43,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public void deleteUnused(Long id) {
         Product product = products.findById(id).orElseThrow(() -> new IllegalArgumentException("Product not found"));
         if (products.countUsage(id) > 0) {

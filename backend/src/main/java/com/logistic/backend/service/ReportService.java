@@ -1,8 +1,11 @@
 package com.logistic.backend.service;
 
+import com.logistic.backend.config.CacheConfig;
 import com.logistic.backend.repository.*;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -21,13 +24,20 @@ public class ReportService {
         this.audit = audit;
     }
 
+    /** Bản sao của LowStockRow (projection proxy không lưu được vào Redis). */
+    public record LowStockItem(Long productId, String sku, String productName, Integer minimum,
+                               Long totalQuantity, Long availableQuantity) implements Serializable {}
+
+    @Cacheable(cacheNames = CacheConfig.STOCK_REPORT, key = "'summary'")
     public Map<String, Object> summary() {
         return Map.of("productCount", products.count(), "stockedProductCount", inventory.countStockedProducts(),
                 "totalQuantity", inventory.sumAllQuantities(), "lowStockCount", inventory.findLowStock().size());
     }
 
-    public List<InventoryRepository.LowStockRow> lowStock() {
-        return inventory.findLowStock();
+    @Cacheable(cacheNames = CacheConfig.STOCK_REPORT, key = "'lowStock'")
+    public List<LowStockItem> lowStock() {
+        return inventory.findLowStock().stream().map(r -> new LowStockItem(r.getProductId(), r.getSku(),
+                r.getProductName(), r.getMinimum(), r.getTotalQuantity(), r.getAvailableQuantity())).toList();
     }
 
     public List<ReportRepository.StagnantRow> stagnant(int days) {

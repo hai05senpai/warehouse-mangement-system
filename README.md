@@ -16,7 +16,7 @@ dbms-logistic/
 │   ├── src/main/java/        # Controller, Service, Repository, Entity, DTO
 │   └── src/main/resources/
 │       ├── application.yaml  # Cấu hình ứng dụng (đọc biến từ tệp .env)
-│       └── data/             # Bộ script SQL dữ liệu mẫu (01 -> 12)
+│       └── data/             # Bộ script SQL dữ liệu mẫu (01 -> 12) + chỉ mục (13)
 ├── frontend/                 # Giao diện người dùng (React + TypeScript + Vite)
 │   └── src/                  # Pages, Components, API client
 ├── docker-compose.yml        # Cấu hình container PostgreSQL 17 & Redis 7
@@ -92,7 +92,7 @@ Mở cửa sổ terminal tại thư mục gốc và di chuyển vào `backend`:
 
 ### Bước 4. Nạp dữ liệu mẫu (Tùy chọn nhưng khuyến nghị)
 
-Các script dữ liệu mẫu trong `backend/src/main/resources/data/` (`01_suppliers.sql` đến `12_admins.sql`) **không tự động chạy**. Sau khi Backend đã khởi động thành công lần đầu (để tạo đầy đủ các bảng), bạn có thể nạp toàn bộ dữ liệu mẫu:
+Các script dữ liệu mẫu trong `backend/src/main/resources/data/` (`01_suppliers.sql` đến `12_admins.sql`, cùng `13_indexes.sql` tạo chỉ mục) **không tự động chạy**. Sau khi Backend đã khởi động thành công lần đầu (để tạo đầy đủ các bảng), bạn có thể nạp toàn bộ dữ liệu mẫu:
 
 - **Trên Windows PowerShell (khi dùng Docker PostgreSQL):**
   Chạy tại thư mục gốc `dbms-logistic`:
@@ -112,7 +112,7 @@ Các script dữ liệu mẫu trong `backend/src/main/resources/data/` (`01_supp
   done
   ```
 - **Nếu dùng công cụ quản trị DB (DBeaver, pgAdmin, DataGrip):**
-  Mở và chạy lần lượt các tệp trong `backend/src/main/resources/data/` theo đúng thứ tự số thứ tự từ `01_suppliers.sql` đến `12_admins.sql`.
+  Mở và chạy lần lượt các tệp trong `backend/src/main/resources/data/` theo đúng thứ tự số thứ tự từ `01_suppliers.sql` đến `13_indexes.sql`.
 
 ### Bước 5. Chạy Frontend (React + Vite)
 

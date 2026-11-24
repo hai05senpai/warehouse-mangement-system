@@ -1,5 +1,7 @@
 package com.logistic.backend.service;
 
+import com.logistic.backend.config.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import com.logistic.backend.dto.TransferRequest;
 import com.logistic.backend.entity.*;
 import com.logistic.backend.repository.*;
@@ -30,6 +32,7 @@ public class InventoryService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public StockTransfer transfer(TransferRequest request) {
         if (request == null || request.code() == null || request.code().isBlank()
                 || request.items() == null || request.items().isEmpty()) {
