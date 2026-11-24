@@ -10,7 +10,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:logistic_db}}
     username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:logistic_user}}
-    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:logistic_password}}
     driver-class-name: org.postgresql.Driver
 
   jpa:
