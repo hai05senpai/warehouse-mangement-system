@@ -1,0 +1,166 @@
+-- =============================================================================
+-- DEMO TRANSACTION TRÊN REDIS
+-- Dán từng lệnh vào Redis Insight → Workbench (database 14)
+-- Yêu cầu: đã chạy 03_setup_redis.sh
+-- =============================================================================
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 1: XEM DỮ LIỆU BAN ĐẦU
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+HGETALL inventory:1:1
+HGETALL inventory:2:2
+HGETALL inventory:3:3
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 2: MULTI/EXEC — "Transaction" cơ bản của Redis
+-- MULTI/EXEC gom nhiều lệnh thành 1 batch atomic. Tất cả chạy HOẶC không gì chạy.
+-- Nhưng: KHÔNG THỂ đọc giá trị giữa chừng để kiểm tra điều kiện.
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- 2a. Nhập kho 20 Laptop bằng MULTI/EXEC
+MULTI
+HINCRBY inventory:1:1 quantity 20
+HSET receipt:REC-MULTI-001 code REC-MULTI-001 quantity 20 status COMPLETED
+EXEC
+
+-- Kiểm tra: quantity = 50 + 20 = 70
+HGETALL inventory:1:1
+HGETALL receipt:REC-MULTI-001
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 3: DISCARD — hủy batch trước khi EXEC
+-- Tương đương ROLLBACK? Không hoàn toàn: chỉ hủy QUEUE chưa chạy.
+-- Nếu đã EXEC rồi thì KHÔNG THỂ rollback.
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+MULTI
+HINCRBY inventory:2:2 quantity 50
+HSET receipt:REC-MULTI-002 code REC-MULTI-002 quantity 50 status COMPLETED
+DISCARD
+
+-- Kiểm tra: quantity vẫn = 100, phiếu không tồn tại
+HGET inventory:2:2 quantity
+EXISTS receipt:REC-MULTI-002
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 4: HẠN CHẾ CỦA MULTI/EXEC — không kiểm tra điều kiện được
+-- Vấn đề: muốn xuất 999 Laptop (tồn chỉ có 70). MULTI/EXEC không thể đọc
+-- tồn kho giữa chừng để so sánh → trừ bừa → tồn kho ÂM.
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- 4a. Xuất 999 bằng MULTI/EXEC — KHÔNG có cách kiểm tra
+MULTI
+HINCRBY inventory:1:1 quantity -999
+EXEC
+
+-- Kiểm tra: quantity = 70 - 999 = -929 → TỒN KHO ÂM!
+HGET inventory:1:1 quantity
+
+-- 4b. Khôi phục lại
+HSET inventory:1:1 quantity 70
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 5: LUA SCRIPT — transaction thực sự với logic nghiệp vụ
+-- Lua script chạy ATOMIC trên Redis server, CÓ THỂ đọc-kiểm tra-ghi.
+-- Đây là cách duy nhất để Redis có "transaction có điều kiện".
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- 5a. Nhập kho bằng Lua: cộng tồn + ghi phiếu trong 1 lệnh atomic
+FCALL receipt_stock 1 inventory:1:1 20 REC-LUA-001
+
+-- Kiểm tra: quantity = 70 + 20 = 90
+HGETALL inventory:1:1
+HGETALL receipt:REC-LUA-001
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 6: LUA SCRIPT — xuất kho CÓ kiểm tra tồn
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- 6a. Xuất 30 Chuột (tồn = 200) → thành công
+FCALL issue_stock 1 inventory:3:3 30 ISS-LUA-001
+
+-- Kiểm tra: quantity = 200 - 30 = 170
+HGETALL inventory:3:3
+HGETALL issue:ISS-LUA-001
+
+-- 6b. Xuất 999 Laptop (tồn = 90) → Lua TỪ CHỐI (trả lỗi, không thay đổi gì)
+FCALL issue_stock 1 inventory:1:1 999 ISS-LUA-FAIL
+
+-- Kiểm tra: quantity vẫn = 90, phiếu không tồn tại
+HGET inventory:1:1 quantity
+EXISTS issue:ISS-LUA-FAIL
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 7: ĐIỀU CHUYỂN ATOMIC — trừ nguồn + cộng đích trong 1 lệnh
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- Chuyển 10 Laptop từ vị trí 1:1 sang vị trí mới 1:2
+FCALL transfer_stock 2 inventory:1:1 inventory:1:2 10
+
+-- Kiểm tra: nguồn giảm 10, đích tăng 10
+HGET inventory:1:1 quantity
+HGET inventory:1:2 quantity
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 8: WATCH/MULTI — Optimistic locking (cơ chế thay thế)
+-- WATCH theo dõi 1 key; nếu key bị thay đổi trước EXEC → EXEC trả nil (hủy).
+-- Giống Optimistic Lock trong PostgreSQL (version check).
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- Chạy ở 2 tab Redis Insight nếu muốn demo đồng thời.
+-- Nếu 1 tab: chạy tuần tự để thấy cơ chế.
+
+-- 8a. Watch key tồn kho
+WATCH inventory:2:2
+
+-- 8b. Đọc tồn hiện tại
+HGET inventory:2:2 quantity
+
+-- 8c. (Giả sử session khác thay đổi key này — bỏ qua nếu chỉ 1 tab)
+-- Ở tab khác chạy: HINCRBY inventory:2:2 quantity 1
+
+-- 8d. Thực hiện giao dịch dựa trên giá trị đã đọc
+MULTI
+HINCRBY inventory:2:2 quantity -10
+EXEC
+-- Nếu key bị sửa giữa WATCH và EXEC → trả (nil) → giao dịch bị hủy
+-- Nếu key không bị sửa → trả kết quả bình thường
+
+HGET inventory:2:2 quantity
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 9: SO SÁNH MULTI/EXEC vs LUA SCRIPT
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- MULTI/EXEC: xuất không kiểm tra → tồn âm
+FCALL multi_issue_no_check 1 inventory:2:2 9999
+
+-- Kiểm tra: TỒN KHO ÂM
+HGET inventory:2:2 quantity
+
+-- Khôi phục
+HSET inventory:2:2 quantity 100
+
+-- Lua issue_stock: xuất có kiểm tra → từ chối
+FCALL issue_stock 1 inventory:2:2 9999 ISS-FAIL
+
+-- Kiểm tra: vẫn = 100
+HGET inventory:2:2 quantity
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 10: RESET DỮ LIỆU
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+FLUSHDB
+-- Sau đó chạy lại 03_setup_redis.sh
