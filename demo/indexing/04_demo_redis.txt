@@ -7,6 +7,7 @@
 // =============================================================================
 
 // STEP 1: Giới thiệu dữ liệu: Redis chỉ tra được theo KHÓA ----------------------
+// DBSIZE phải ra 105000. Nếu ra 0-2 là đang ở db 0 (của app): bấm bút chì cạnh "db0" ở góc trên, đổi thành 15.
 DBSIZE
 HGETALL inv:1
 HGETALL prod:1
