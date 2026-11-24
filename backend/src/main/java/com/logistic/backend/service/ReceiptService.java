@@ -1,5 +1,7 @@
 package com.logistic.backend.service;
 
+import com.logistic.backend.config.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import com.logistic.backend.dto.ReceiptRequest;
 import com.logistic.backend.entity.*;
 import com.logistic.backend.repository.*;
@@ -30,6 +32,7 @@ public class ReceiptService {
     public List<ReceiptOrder> list() { return orders.findAllWithSupplier(); }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public ReceiptOrder create(ReceiptRequest request) {
         if (request == null || request.code() == null || request.code().isBlank()
                 || request.supplierId() == null || request.items() == null || request.items().isEmpty()) {
@@ -51,6 +54,7 @@ public class ReceiptService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public ReceiptOrder complete(Long id) {
         ReceiptOrder order = orders.findByIdWithLock(id).orElseThrow(() -> new IllegalArgumentException("Receipt order not found"));
         if (!"PENDING".equals(order.getStatus())) throw new IllegalStateException("Only pending receipt orders can be completed");
@@ -64,6 +68,7 @@ public class ReceiptService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public ReceiptOrder cancel(Long id) {
         ReceiptOrder order = orders.findByIdWithLock(id).orElseThrow(() -> new IllegalArgumentException("Receipt order not found"));
         if (!"PENDING".equals(order.getStatus())) throw new IllegalStateException("Only pending receipt orders can be cancelled");

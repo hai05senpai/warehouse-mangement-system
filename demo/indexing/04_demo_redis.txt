@@ -1,0 +1,67 @@
+// =============================================================================
+// DEMO CHỈ MỤC TỰ DỰNG TRÊN REDIS: dán vào Redis Insight > Workbench (database 15)
+// Chạy từng lệnh. Mỗi FCALL trả về: 1) số dòng   2) thời gian chạy phía server.
+// Yêu cầu: đã chạy 01_load_postgres.sql rồi 02_load_redis.sh.
+// Code của các hàm nằm trong redis_functions.lua (mở file đó khi giảng).
+// Dùng redis-cli thay Workbench: docker exec -it logistic-redis redis-cli -n 15
+// =============================================================================
+
+// STEP 1: Giới thiệu dữ liệu: Redis chỉ tra được theo KHÓA ----------------------
+// DBSIZE phải ra 105000. Nếu ra 0-2 là đang ở db 0 (của app): bấm bút chì cạnh "db0" ở góc trên, đổi thành 15.
+DBSIZE
+HGETALL inv:1
+HGETALL prod:1
+
+
+// STEP 2: Xóa chỉ mục (về trạng thái ban đầu) ----------------------------------
+FCALL drop_indexes 0
+
+
+// STEP 3: TRƯỚC khi có chỉ mục: tra tồn theo khu nhỏ "Khu 15" -------------------
+// Không có WHERE, không có planner: phải duyệt cả 100.000 khóa inv:* (giống Seq Scan)
+FCALL scan_zone 0 "khu 15"
+FCALL scan_zone 0 "khu 05"
+FCALL scan_sku 0 "0123"
+FCALL scan_lowstock 0
+
+
+// STEP 4: Tự xây chỉ mục (tương đương CREATE INDEX, nhưng phải tự viết code) ----
+FCALL build_indexes 0
+
+// Xem chỉ mục vừa dựng: chỉ là các khóa dữ liệu bình thường
+SCARD "idx:zone:khu 15"
+SMEMBERS "idx:zone:khu 15"
+ZRANGE idx:sku 0 4
+ZRANGEBYSCORE idx:lowstock -inf (0 WITHSCORES LIMIT 0 5
+
+
+// STEP 5: SAU khi có chỉ mục: truy vấn phải VIẾT LẠI để gọi đúng khóa chỉ mục ---
+FCALL idx_zone 0 "khu 15"
+FCALL idx_zone 0 "khu 05"
+FCALL idx_lowstock 0
+
+
+// STEP 6: Tìm SKU: Redis chỉ có chỉ mục cho TIỀN TỐ, không có cho "chứa chuỗi" --
+// Tiền tố: ZRANGEBYLEX trên sorted set (giống B+-tree)
+FCALL idx_sku_prefix 0 "lap-0012"
+// "Chứa chuỗi": vẫn phải duyệt từ điển 5.000 SKU (ít hơn 100.000 dòng nhưng vẫn là quét)
+FCALL idx_sku 0 "0123"
+
+
+// STEP 7: Cái giá: tồn kho thay đổi => ứng dụng phải tự sửa mọi chỉ mục --------
+// Lấy 1 mặt hàng đang tồn thấp, rồi 1 dòng tồn của nó
+ZRANGEBYSCORE idx:lowstock -inf (0 WITHSCORES LIMIT 0 1
+// Thay <product_id> bằng số vừa nhận (ví dụ 100)
+SMEMBERS idx:product:<product_id>
+// Thay <inv_id> bằng 1 id ở trên: nhập hàng lên 5000 => sửa 1 HASH + 3 chỉ mục
+FCALL update_stock 0 <inv_id> 5000
+FCALL idx_lowstock 0
+
+
+// STEP 8: Mất chỉ mục => kết quả sai mà KHÔNG báo lỗi ---------------------------
+// PostgreSQL thiếu chỉ mục thì chỉ chậm hơn (planner tự quét bảng).
+// Redis thiếu chỉ mục thì truy vấn trả về rỗng, ứng dụng không hề biết.
+DEL "idx:zone:khu 15"
+FCALL idx_zone 0 "khu 15"
+// Dựng lại
+FCALL build_indexes 0

@@ -28,4 +28,5 @@ INSERT INTO products (sku, name, category, unit, min_quantity) VALUES
 ('AC-PANA-12000', 'Máy lạnh Panasonic Inverter 1.5 HP CU/CS-PU12AKH-8', 'Gia dụng', 'Bộ', 10),
 ('REF-LG-635L', 'Tủ lạnh LG Inverter Side by Side 635 lít', 'Gia dụng', 'Cái', 4),
 ('WAS-ELE-10KG', 'Máy giặt cửa trước Electrolux Inverter 10kg', 'Gia dụng', 'Cái', 5),
-('PUR-PANA-F-PXJ30A', 'Máy lọc không khí Panasonic F-PXJ30A', 'Gia dụng', 'Cái', 15);
+('PUR-PANA-F-PXJ30A', 'Máy lọc không khí Panasonic F-PXJ30A', 'Gia dụng', 'Cái', 15),
+('KB-LOGI-MXKEYS', 'Bàn phím Logitech MX Keys S', 'Phụ kiện', 'Cái', 10);

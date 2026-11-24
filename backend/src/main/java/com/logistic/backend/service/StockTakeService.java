@@ -1,5 +1,7 @@
 package com.logistic.backend.service;
 
+import com.logistic.backend.config.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import com.logistic.backend.dto.CreateStockTakeRequest;
 import com.logistic.backend.dto.StockTakeItemRequest;
 import com.logistic.backend.entity.*;
@@ -43,6 +45,7 @@ public class StockTakeService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public StockTake createStockTake(CreateStockTakeRequest request) {
         if (request == null || request.getCode() == null || request.getCode().isBlank()
                 || request.getItems() == null || request.getItems().isEmpty()) {
@@ -106,6 +109,7 @@ public class StockTakeService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public StockTake completeStockTake(Long stockTakeId, String approvedBy) {
         String lockToken = UUID.randomUUID().toString();
         List<String> acquiredKeys = acquireRedisLocks(List.of("lock:stock-take:" + stockTakeId), lockToken);
@@ -142,6 +146,7 @@ public class StockTakeService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public StockTake cancelStockTake(Long stockTakeId) {
         String lockToken = UUID.randomUUID().toString();
         List<String> acquiredKeys = acquireRedisLocks(List.of("lock:stock-take:" + stockTakeId), lockToken);

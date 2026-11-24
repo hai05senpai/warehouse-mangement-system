@@ -29,3 +29,10 @@ INSERT INTO inventory (product_id, location_id, quantity, reserved_quantity, upd
 (28, 28, 18, 0, CURRENT_TIMESTAMP),
 (29, 29, 22, 0, CURRENT_TIMESTAMP),
 (30, 30, 70, 8, CURRENT_TIMESTAMP);
+
+-- UC-07 demo: threshold 10, stock 4 + 5 = 9 across two locations -> shows in low-stock list
+INSERT INTO inventory (product_id, location_id, quantity, reserved_quantity, updated_at)
+SELECT p.id, l.id, v.qty, 0, CURRENT_TIMESTAMP
+FROM (VALUES ('A1-R01-S01', 4), ('A1-R01-S02', 5)) AS v(code, qty)
+JOIN locations l ON l.code = v.code
+JOIN products p ON p.sku = 'KB-LOGI-MXKEYS';

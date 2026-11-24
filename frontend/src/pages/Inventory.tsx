@@ -52,7 +52,7 @@ export function Inventory() {
     <Panel title="Tra cứu tồn kho" subtitle="Lọc hàng hóa tại tất cả vị trí lưu trữ">
       <form className="filter-bar" onSubmit={(event) => { event.preventDefault(); void load() }}>
         <Field label="Mã SKU"><input value={sku} onChange={(event) => setSku(event.target.value)} placeholder="Tìm SKU..." /></Field>
-        <Field label="Khu vực"><input value={zone} onChange={(event) => setZone(event.target.value)} placeholder="Tất cả khu vực" /></Field>
+        <Field label="Khu vực"><select value={zone} onChange={(event) => setZone(event.target.value)}><option value="">Tất cả khu vực</option>{[...new Set(locations.map((location) => location.zone))].sort().map((name) => <option key={name} value={name}>{name}</option>)}</select></Field>
         <label className="check-field"><input type="checkbox" checked={available} onChange={(event) => setAvailable(event.target.checked)} /> Chỉ hàng khả dụng</label>
         <button className="button button-primary"><Search size={16} />Tìm kiếm</button>
       </form>
