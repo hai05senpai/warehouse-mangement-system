@@ -1,0 +1,70 @@
+// =============================================================================
+// DEMO XỬ LÝ TRUY VẤN TRÊN REDIS: dán vào Redis Insight > Workbench (database 13)
+// Chạy từng lệnh. Mỗi FCALL trả về: 1) số dòng   2) thời gian chạy phía server   3) (nếu có) ghi chú.
+// Yêu cầu: đã chạy 01_load_postgres.sql rồi 02_load_redis.sh.
+// Code của các hàm nằm trong redis_functions.lua (mở file đó khi giảng).
+// Mốc thời gian là epoch giây: 27/08/2026 = 1787788800 (90 ngày trước "hôm nay" 25/11/2026),
+//                              01/10/2026 = 1790812800, 01/11/2026 = 1793491200.
+// Dùng redis-cli thay Workbench: docker exec -it logistic-redis redis-cli -n 13
+// =============================================================================
+
+// STEP 1: Giới thiệu dữ liệu: mỗi dòng của bảng là một HASH, không có SQL --------
+// DBSIZE phải ra 115200. Nếu ra số khác là đang ở database khác: bấm bút chì cạnh "db0" ở góc trên, đổi thành 13.
+DBSIZE
+HGETALL io:1
+HGETALL ii:1
+// Muốn "JOIN" dòng xuất với phiếu xuất: tự đọc order_id rồi tự HGETALL io:<order_id>.
+
+
+// STEP 2: Về trạng thái ban đầu (xóa bảng gộp) -----------------------------------
+FCALL q_drop_agg 0
+
+
+// STEP 3: UC-08 và UC-09 không có bảng gộp: lập trình viên tự chọn thuật toán --------
+// 3a. UC-08 hàng không xuất trong 90 ngày, "hash anti join" viết tay:
+//     băm phiếu xuất gần đây -> quét 30.000 dòng xuất 1 lần -> loại mặt hàng đã xuất.
+//     Kết quả 1582, giống PostgreSQL.
+FCALL q_stagnant_scan 0 1787788800
+
+// 3b. Cùng câu hỏi, viết theo kiểu "nested loop" (mỗi mặt hàng quét lại toàn bộ dòng xuất).
+//     Chỉ chạy 20 mặt hàng: ~0,2 s (Docker) / ~0,45 s (Railway); ước tính cả 5.000 mặt hàng ~50 s / ~110 s.
+//     PostgreSQL sẽ không bao giờ chọn kế hoạch này; Redis không có bộ tối ưu để ngăn.
+//     (Không tăng số 20: Redis đơn luồng, chạy lâu sẽ chặn mọi client khác.)
+FCALL q_stagnant_nested 0 1787788800 20
+
+// 3c. UC-09 nhập - xuất - tồn tháng 10/2026: hash join + hash aggregate viết tay trên 3 loại chứng từ.
+//     Dòng mẫu AC-00005: đầu kỳ 466 | nhập 31 | xuất 29 | điều chỉnh 0 | cuối kỳ 468, giống PostgreSQL.
+FCALL q_inout_scan 0 1790812800 1793491200
+
+
+// STEP 4: Cách của Redis: TÍNH SẴN kết quả gộp, lúc đọc chỉ tra khóa ---------------
+FCALL q_build_agg 0
+
+// Xem bảng gộp: chỉ là các khóa dữ liệu bình thường
+HGET agg:onhand 5
+ZRANGE agg:last_issue 0 4 WITHSCORES
+// Xuất theo ngày 01/10/2026 (ngày thứ 20727 tính từ 1/1/1970): mặt hàng -> số lượng
+HGETALL agg:day:I:20727
+
+
+// STEP 5: Đọc từ bảng gộp: cùng kết quả, nhanh hơn hàng chục lần ----------------
+FCALL q_stagnant_agg 0 1787788800
+FCALL q_inout_agg 0 1790812800 1793491200
+
+
+// STEP 6: Cái giá: mỗi lần ghi phải tự cập nhật mọi bảng gộp ----------------------
+// Mặt hàng 10 đang "chậm luân chuyển". inv:15010 là một dòng tồn của nó.
+HGETALL inv:15010
+// Xuất 1 cái: 1 lệnh nghiệp vụ = sửa 6 khóa (phiếu, dòng xuất, tồn, tổng tồn, lần xuất gần nhất, xuất theo ngày)
+FCALL q_issue 0 15010 1
+// Mặt hàng 10 không còn chậm luân chuyển: cả hai cách tính đều ra 1581
+FCALL q_stagnant_agg 0 1787788800
+FCALL q_stagnant_scan 0 1787788800
+// Quên cập nhật 1 bảng gộp thì báo cáo sai mà không có lỗi nào. Ví dụ xóa agg:last_issue:
+DEL agg:last_issue
+FCALL q_stagnant_agg 0 1787788800
+// => 5000: mọi mặt hàng đều "chậm luân chuyển". Dựng lại:
+FCALL q_build_agg 0
+
+
+// Sau buổi demo: chạy lại 02_load_redis.sh để đưa dữ liệu (phiếu xuất ở STEP 6) về ban đầu.
