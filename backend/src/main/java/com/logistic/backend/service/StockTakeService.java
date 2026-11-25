@@ -129,6 +129,12 @@ public class StockTakeService {
                                 item.getProduct().getId(), item.getLocation().getId())
                         .orElseThrow(() -> new IllegalStateException("Inventory item not found"));
 
+                // FR-05: tồn đã đổi kể từ lúc lập phiếu thì số đếm không còn đúng, phải kiểm lại
+                if (!inventory.getQuantity().equals(item.getSystemQty())) {
+                    throw new IllegalStateException("Inventory of " + item.getProduct().getSku() + " at "
+                            + item.getLocation().getCode() + " changed since this stock take was created ("
+                            + item.getSystemQty() + " -> " + inventory.getQuantity() + "). Please recount.");
+                }
                 if (item.getActualQty() < inventory.getReservedQuantity()) {
                     throw new IllegalStateException("Counted quantity cannot be lower than quantity reserved for pending issues");
                 }
