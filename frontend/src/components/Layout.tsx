@@ -57,12 +57,12 @@ export function Layout() {
 
   return (
     <div className="app-shell">
-      {open && <button className="mobile-backdrop" aria-label="Đóng điều hướng" onClick={() => setOpen(false)} />}
+      {open && <button type="button" className="mobile-backdrop" aria-label="Đóng điều hướng" onClick={() => setOpen(false)} />}
       <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
         <div className="brand">
-          <div className="brand-mark"><Boxes size={22} /></div>
+          <div className="brand-mark"><Boxes size={20} /></div>
           <div><strong>Stockroom</strong><span>QUẢN LÝ KHO HÀNG</span></div>
-          <button className="mobile-close icon-button" onClick={() => setOpen(false)} aria-label="Đóng menu"><X size={18} /></button>
+          <button type="button" className="mobile-close icon-button" onClick={() => setOpen(false)} aria-label="Đóng menu"><X size={18} /></button>
         </div>
         <div className="nav-caption">KHÔNG GIAN LÀM VIỆC</div>
         <nav className="nav-list">
@@ -94,18 +94,19 @@ export function Layout() {
       </aside>
       <main className="main-area">
         <header className="topbar">
-          <button className="mobile-menu icon-button" onClick={() => setOpen(true)} aria-label="Mở menu"><Menu size={20} /></button>
+          <button type="button" className="mobile-menu icon-button" onClick={() => setOpen(true)} aria-label="Mở menu"><Menu size={20} /></button>
           <div className="breadcrumb">Không gian làm việc <span>/</span> <strong>Vận hành</strong></div>
           <div className="topbar-right">
-            <span className="live-status"><i /> Đang hoạt động</span>
+            <span className="live-status" title="Đang hoạt động"><i /><span className="live-status-text">Đang hoạt động</span></span>
             <div className="avatar avatar-small" title={displayName}>{initials}</div>
             <button
               type="button"
               className="button button-secondary logout-button"
+              aria-label="Đăng xuất"
               onClick={() => void handleLogout()}
             >
-              <LogOut size={14} />
-              <span>Đăng xuất</span>
+              <LogOut size={16} />
+              <span className="logout-button-text">Đăng xuất</span>
             </button>
           </div>
         </header>

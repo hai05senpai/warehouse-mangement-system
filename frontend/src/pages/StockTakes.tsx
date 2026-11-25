@@ -125,14 +125,14 @@ export function StockTakes() {
     {(error || message) && <Notice message={error || message} kind={error ? 'error' : 'success'} />}
     <Panel title="Ghi nhận số lượng kiểm kê" subtitle="Một phiếu kiểm kê (StockTake) hỗ trợ kiểm đếm nhiều mặt hàng (StockTakeItem) và tự động tổng hợp chênh lệch">
       <form className="form-stack" onSubmit={(event) => void submit(event)}>
-        <div className="filter-bar" style={{ marginBottom: 0 }}>
+        <div className="filter-bar">
           <Field label="Mã phiếu kiểm kê">
             <input required value={code} onChange={(event) => setCode(event.target.value)} placeholder="KK-0001" />
           </Field>
         </div>
 
         {items.map((line, index) => (
-          <div className="filter-bar" key={index} style={{ marginBottom: 0 }}>
+          <div className="filter-bar" key={index}>
             <Field label={index === 0 ? 'Hàng hóa' : `Hàng hóa #${index + 1}`}>
               <select required value={line.productId} onChange={(event) => updateLine(index, { productId: event.target.value })}>
                 <option value="">Chọn hàng hóa</option>
@@ -156,14 +156,14 @@ export function StockTakes() {
               aria-label="Xóa dòng kiểm kê"
               onClick={() => removeLine(index)}
             >
-              <Trash2 size={15} />
+              <Trash2 size={16} />
             </button>
           </div>
         ))}
 
-        <div className="form-actions" style={{ justifyContent: 'space-between' }}>
+        <div className="form-actions form-actions-between">
           <button type="button" className="button button-secondary" onClick={addLine}>
-            <Plus size={15} /> Thêm dòng kiểm kê
+            <Plus size={16} /> Thêm dòng kiểm kê
           </button>
           <button className="button button-primary" type="submit">
             <Plus size={16} /> Lưu kết quả ({items.length} dòng)
@@ -181,10 +181,10 @@ export function StockTakes() {
             {selectedTake.status === 'DRAFT' && (
               <>
                 <button className="button button-primary" type="button" onClick={() => void changeStatus(Number(selectedTake.id), 'complete')}>
-                  <Check size={15} /> Duyệt & Điều chỉnh tồn kho
+                  <Check size={16} /> Duyệt & Điều chỉnh tồn kho
                 </button>
-                <button className="button button-secondary" type="button" onClick={() => void changeStatus(Number(selectedTake.id), 'cancel')}>
-                  <X size={15} /> Hủy phiếu
+                <button className="button button-danger" type="button" onClick={() => void changeStatus(Number(selectedTake.id), 'cancel')}>
+                  <X size={16} /> Hủy phiếu
                 </button>
               </>
             )}
@@ -206,7 +206,7 @@ export function StockTakes() {
             difference: summary.difference > 0 ? `+${summary.difference}` : summary.difference,
           }]}
         />
-        <div style={{ marginTop: '14px' }}>
+        <div className="table-section-gap">
           <DataTable searchable={false} rows={detailItems} empty="Phiếu kiểm kê không có mặt hàng." />
         </div>
       </Panel>
