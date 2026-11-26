@@ -61,6 +61,7 @@ export function DataTable({ rows, empty = 'No records found', searchable = true,
     closingQuantity: 'Tồn cuối kỳ', occurredAt: 'Thời gian', locationCode: 'Mã vị trí',
     lastIssueDate: 'Lần xuất gần nhất',
     transferDate: 'Ngày điều chuyển', activity: 'Hoạt động',
+    sourceLocation: 'Vị trí chuyển đi', destinationLocation: 'Vị trí chuyển đến',
   }
   const translatedEmpty = empty === 'No records found' ? 'Không có dữ liệu.' : empty
 

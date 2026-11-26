@@ -80,6 +80,7 @@ export function errorMessage(error: unknown): string {
       'Issue order not found': 'Không tìm thấy phiếu xuất kho.',
       'Receipt order not found': 'Không tìm thấy phiếu nhập kho.',
       'Stock take order not found': 'Không tìm thấy phiếu kiểm kê.',
+      'Stock transfer not found': 'Không tìm thấy phiếu điều chuyển.',
       'Inventory item not found': 'Không tìm thấy tồn kho tại vị trí này.',
       'Source inventory not found': 'Không tìm thấy tồn kho tại vị trí nguồn.',
       'Only pending receipt orders can be completed': 'Chỉ có thể hoàn tất phiếu nhập đang chờ xử lý.',
