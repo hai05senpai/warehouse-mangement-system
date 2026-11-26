@@ -273,7 +273,41 @@ COMMIT;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════════
--- STEP 9: RESET DỮ LIỆU (chạy lại từ đầu)
+-- STEP 9: PHIẾU XUẤT 2 DÒNG, DÒNG 2 THIẾU HÀNG → HỦY TOÀN BỘ
+-- Mục tiêu: Dòng 1 (10 chuột) hợp lệ và đã được giữ chỗ, dòng 2 (999 laptop)
+-- vượt tồn. Ràng buộc reserved_quantity <= quantity (BR-02) chặn dòng 2, giao dịch
+-- chuyển sang aborted; ROLLBACK hủy luôn phiếu và phần giữ chỗ của dòng 1.
+-- Đây đúng là cách @Transactional của ứng dụng xử lý (NFR-02).
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- 9a. Trước: chuột 170 / giữ 0, laptop 130 / giữ 0
+SELECT p.sku, i.quantity, i.reserved_quantity FROM inventory i JOIN products p ON p.id = i.product_id ORDER BY p.sku;
+
+BEGIN;
+    INSERT INTO issue_orders (code, customer_id, status)
+    VALUES ('ISS-DEMO-002', 2, 'PENDING');
+
+    -- Dòng 1: giữ 10 chuột (đủ hàng) → thành công
+    INSERT INTO issue_items (issue_order_id, product_id, location_id, quantity)
+    VALUES (currval('issue_orders_id_seq'), 3, 3, 10);
+    UPDATE inventory SET reserved_quantity = reserved_quantity + 10
+    WHERE product_id = 3 AND location_id = 3;
+
+    -- Dòng 2: giữ 999 laptop (chỉ có 130)
+    INSERT INTO issue_items (issue_order_id, product_id, location_id, quantity)
+    VALUES (currval('issue_orders_id_seq'), 1, 1, 999);
+    UPDATE inventory SET reserved_quantity = reserved_quantity + 999
+    WHERE product_id = 1 AND location_id = 1;
+    -- LỖI: violates check constraint "inventory_reserved_le_quantity"
+ROLLBACK;
+
+-- 9b. Sau: không còn gì của phiếu, kể cả phần giữ chỗ của dòng 1
+SELECT p.sku, i.quantity, i.reserved_quantity FROM inventory i JOIN products p ON p.id = i.product_id ORDER BY p.sku;
+SELECT count(*) AS so_phieu FROM issue_orders WHERE code = 'ISS-DEMO-002';
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 10: RESET DỮ LIỆU (chạy lại từ đầu)
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 DROP SCHEMA txn_demo CASCADE;

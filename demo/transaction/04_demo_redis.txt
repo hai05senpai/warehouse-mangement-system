@@ -159,7 +159,37 @@ HGET inventory:2:2 quantity
 
 
 -- ═══════════════════════════════════════════════════════════════════════════════
--- STEP 10: RESET DỮ LIỆU
+-- STEP 10: LỆNH LỖI LÚC CHẠY TRONG MULTI → KHÔNG ROLLBACK
+-- Tương ứng STEP 9 của PostgreSQL: lô 2 lệnh, lệnh 1 giữ chỗ 10 chuột (đúng),
+-- lệnh 2 lỗi lúc chạy (HINCRBY trên một trường chữ). EXEC vẫn chạy lệnh 1,
+-- trả lỗi cho lệnh 2, và KHÔNG hoàn tác lệnh 1.
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- 10a. Trước: reserved = 0
+HGET inventory:3:3 reserved
+
+MULTI
+HINCRBY inventory:3:3 reserved 10
+HINCRBY product:1 sku 999
+EXEC
+-- Kết quả: 1) (integer) 10   2) (error) ERR hash value is not an integer
+
+-- 10b. Sau: reserved = 10 → phần đúng của lô vẫn còn, không có rollback
+HGET inventory:3:3 reserved
+
+-- 10c. So sánh: lỗi CÚ PHÁP lúc xếp hàng thì cả lô bị từ chối (EXECABORT)
+MULTI
+HINCRBY inventory:3:3 reserved 10
+HINCRBY inventory:3:3
+EXEC
+HGET inventory:3:3 reserved
+
+-- Khôi phục
+HSET inventory:3:3 reserved 0
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 11: RESET DỮ LIỆU
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 FLUSHDB
