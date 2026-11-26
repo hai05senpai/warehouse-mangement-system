@@ -119,7 +119,7 @@ export function Issues() {
     {(error || message) && <Notice message={error || message} kind={error ? 'error' : 'success'} />}
     <Panel title="Tạo phiếu xuất kho" subtitle="Một phiếu xuất (IssueOrder) hỗ trợ xuất nhiều mặt hàng (IssueItem) trong cùng một giao dịch và tự động sắp xếp khóa chống Deadlock">
       <form className="form-stack" onSubmit={(event) => void submit(event)}>
-        <div className="filter-bar" style={{ marginBottom: 0 }}>
+        <div className="filter-bar">
           <Field label="Mã phiếu xuất">
             <input required value={code} onChange={(event) => setCode(event.target.value)} placeholder="PX-0001" />
           </Field>
@@ -132,7 +132,7 @@ export function Issues() {
         </div>
 
         {items.map((line, index) => (
-          <div className="filter-bar" key={index} style={{ marginBottom: 0 }}>
+          <div className="filter-bar" key={index}>
             <Field label={index === 0 ? 'Hàng hóa' : `Hàng hóa #${index + 1}`}>
               <select required value={line.productId} onChange={(event) => updateLine(index, { productId: event.target.value })}>
                 <option value="">Chọn hàng hóa</option>
@@ -156,14 +156,14 @@ export function Issues() {
               aria-label="Xóa dòng mặt hàng"
               onClick={() => removeLine(index)}
             >
-              <Trash2 size={15} />
+              <Trash2 size={16} />
             </button>
           </div>
         ))}
 
-        <div className="form-actions" style={{ justifyContent: 'space-between' }}>
+        <div className="form-actions form-actions-between">
           <button type="button" className="button button-secondary" onClick={addLine}>
-            <Plus size={15} /> Thêm dòng mặt hàng
+            <Plus size={16} /> Thêm dòng mặt hàng
           </button>
           <button className="button button-primary" type="submit">
             <Plus size={16} /> Giữ chỗ hàng ({items.length} dòng)
@@ -181,10 +181,10 @@ export function Issues() {
             {selectedOrder.status === 'PENDING' && (
               <>
                 <button className="button button-primary" type="button" onClick={() => void changeStatus(Number(selectedOrder.id), 'complete')}>
-                  <Check size={15} /> Hoàn tất xuất kho
+                  <Check size={16} /> Hoàn tất xuất kho
                 </button>
-                <button className="button button-secondary" type="button" onClick={() => void changeStatus(Number(selectedOrder.id), 'cancel')}>
-                  <X size={15} /> Hủy phiếu
+                <button className="button button-danger" type="button" onClick={() => void changeStatus(Number(selectedOrder.id), 'cancel')}>
+                  <X size={16} /> Hủy phiếu
                 </button>
               </>
             )}

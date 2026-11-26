@@ -16,7 +16,7 @@ export function Page({ eyebrow, title, description, action, children }: {
 
 export function Notice({ message, kind = 'error' }: { message: string; kind?: 'error' | 'success' }) {
   const Icon = kind === 'success' ? CheckCircle2 : AlertCircle
-  return <div className={`notice notice-${kind}`} role="status"><Icon size={17} />{message}</div>
+  return <div className={`notice notice-${kind}`} role="status"><Icon size={18} /><span>{message}</span></div>
 }
 
 export function Panel({ title, subtitle, action, children }: {

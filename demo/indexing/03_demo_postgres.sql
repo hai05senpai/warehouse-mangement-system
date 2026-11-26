@@ -15,10 +15,12 @@ SELECT zone, count(*) AS so_vi_tri FROM locations GROUP BY zone ORDER BY zone;
 
 
 -- STEP 2: Xóa chỉ mục (về trạng thái ban đầu) ---------------------------------
-DROP INDEX IF EXISTS idx_inventory_location;
-DROP INDEX IF EXISTS idx_locations_zone_lower;
-DROP INDEX IF EXISTS idx_products_sku_trgm;
-DROP INDEX IF EXISTS idx_zone_plain;
+-- Luôn ghi rõ schema idx_demo: app có chỉ mục cùng tên trong public, DROP không ghi schema sẽ xóa nhầm sang đó.
+DROP INDEX IF EXISTS idx_demo.idx_inventory_location;
+DROP INDEX IF EXISTS idx_demo.idx_locations_zone_lower;
+DROP INDEX IF EXISTS idx_demo.idx_products_sku_trgm;
+DROP INDEX IF EXISTS idx_demo.idx_zone_plain;
+DROP INDEX IF EXISTS idx_demo.idx_zone_hash;
 
 -- Chỉ còn chỉ mục mặc định: khóa chính + UNIQUE
 SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'idx_demo' ORDER BY tablename;
@@ -62,7 +64,7 @@ WHERE lower(l.zone) = 'khu 05';
 
 
 -- STEP 7: Bẫy function-based index: chỉ mục trên "zone" trơn bị bỏ qua ------
-DROP INDEX idx_locations_zone_lower;
+DROP INDEX idx_demo.idx_locations_zone_lower;
 CREATE INDEX idx_zone_plain ON locations (zone);
 ANALYZE locations;
 
@@ -70,7 +72,7 @@ ANALYZE locations;
 EXPLAIN SELECT * FROM locations WHERE lower(zone) = 'khu 15';
 
 -- Khôi phục chỉ mục đúng
-DROP INDEX idx_zone_plain;
+DROP INDEX idx_demo.idx_zone_plain;
 CREATE INDEX idx_locations_zone_lower ON locations (lower(zone));
 ANALYZE locations;
 
@@ -89,7 +91,7 @@ EXPLAIN ANALYZE SELECT * FROM products WHERE lower(sku) LIKE '%0123%';
 
 -- STEP 9: Hash so với B+-tree (chạy cả khối; ROLLBACK hoàn tác ở cuối) -------
 BEGIN;
-DROP INDEX idx_locations_zone_lower;
+DROP INDEX idx_demo.idx_locations_zone_lower;
 CREATE INDEX idx_zone_hash ON locations USING hash (lower(zone));
 ANALYZE locations;
 EXPLAIN SELECT * FROM locations WHERE lower(zone) = 'khu 15';     -- phép bằng: dùng Hash

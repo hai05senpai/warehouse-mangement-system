@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Inbox, Search } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Row } from '../api'
+
+const CODE_COLUMNS = new Set(['sku', 'code', 'location', 'locationCode'])
+const NUMERIC_DIFF_COLUMNS = new Set(['diffQty', 'difference'])
 
 function display(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—'
@@ -42,6 +45,11 @@ export function DataTable({ rows, empty = 'No records found', searchable = true,
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
   const visible = filtered.slice(page * pageSize, (page + 1) * pageSize)
   const columns = [...new Set(visible.flatMap((row) => Object.keys(row).filter((key) => key !== 'id')))].slice(0, 7)
+  const numericColumns = new Set(
+    columns.filter((column) =>
+      NUMERIC_DIFF_COLUMNS.has(column) || visible.some((row) => typeof row[column] === 'number'),
+    ),
+  )
   const headings: Record<string, string> = {
     sku: 'Mã SKU', name: 'Tên hàng hóa', category: 'Danh mục', unit: 'Đơn vị',
     minQuantity: 'Tồn tối thiểu', product: 'Sản phẩm', productName: 'Tên hàng hóa',
@@ -75,31 +83,60 @@ export function DataTable({ rows, empty = 'No records found', searchable = true,
       )}
       <div className="table-scroll">
         <table>
-          <thead><tr>{columns.map((column) => <th key={column}>{headings[column] ?? column.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())}</th>)}{actions && <th>Thao tác</th>}</tr></thead>
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th key={column} className={numericColumns.has(column) ? 'col-num' : undefined}>
+                  {headings[column] ?? column.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())}
+                </th>
+              ))}
+              {actions && <th className="action-cell">Thao tác</th>}
+            </tr>
+          </thead>
           <tbody>
             {visible.map((row, index) => {
               const isSelected = selectedRowId !== undefined && selectedRowId !== null && String(row.id) === String(selectedRowId)
+              const rowClass = [
+                onRowClick ? 'table-row-clickable' : '',
+                isSelected ? 'table-row-selected' : '',
+              ].filter(Boolean).join(' ') || undefined
               return (
-              <tr
-                key={String(row.id ?? index)}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                style={onRowClick ? { cursor: 'pointer', background: isSelected ? '#eaf5ef' : undefined } : undefined}
-              >
-                {columns.map((column) => {
-                  const value = row[column]
-                  const isStatus = column.toLowerCase() === 'status'
-                  const statusClass = typeof value === 'string'
-                    ? ({ PENDING: 'pending', COMPLETED: 'completed', CANCELLED: 'cancelled', DRAFT: 'draft' }[value] ?? '')
-                    : ''
-                  return <td key={column}>{isStatus
-                    ? <span className={`badge ${statusClass ? `badge-${statusClass}` : ''}`}>{display(value)}</span>
-                    : display(value)}</td>
-                })}
-                {actions && <td className="action-cell" onClick={(event) => event.stopPropagation()}>{actions(row)}</td>}
-              </tr>
+                <tr
+                  key={String(row.id ?? index)}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={rowClass}
+                >
+                  {columns.map((column) => {
+                    const value = row[column]
+                    const isStatus = column.toLowerCase() === 'status'
+                    const isNumeric = !isStatus && (typeof value === 'number' || numericColumns.has(column))
+                    const isCode = !isStatus && !isNumeric && CODE_COLUMNS.has(column)
+                    const cellClass = isNumeric ? 'cell-num' : isCode ? 'cell-code' : undefined
+                    const statusClass = typeof value === 'string'
+                      ? ({ PENDING: 'pending', COMPLETED: 'completed', CANCELLED: 'cancelled', DRAFT: 'draft' }[value] ?? '')
+                      : ''
+                    return (
+                      <td key={column} className={cellClass}>
+                        {isStatus
+                          ? <span className={`badge ${statusClass ? `badge-${statusClass}` : ''}`}>{display(value)}</span>
+                          : display(value)}
+                      </td>
+                    )
+                  })}
+                  {actions && <td className="action-cell" onClick={(event) => event.stopPropagation()}>{actions(row)}</td>}
+                </tr>
               )
             })}
-            {visible.length === 0 && <tr><td className="empty-cell" colSpan={Math.max(columns.length + (actions ? 1 : 0), 1)}>{translatedEmpty}</td></tr>}
+            {visible.length === 0 && (
+              <tr>
+                <td className="empty-cell" colSpan={Math.max(columns.length + (actions ? 1 : 0), 1)}>
+                  <div className="table-empty-content">
+                    <Inbox size={28} strokeWidth={1.6} />
+                    <span>{translatedEmpty}</span>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

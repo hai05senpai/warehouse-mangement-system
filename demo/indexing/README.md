@@ -21,6 +21,7 @@ Chạy được ở 2 nơi, cùng script và cùng các bước:
 | `redis_functions.lua`  | Code        | "Chỉ mục tự dựng" của Redis: quét, xây chỉ mục, truy vấn qua chỉ mục, cập nhật        |
 | `03_demo_postgres.sql` | **Demo**    | Các bước demo, mở trong **pgAdmin**                                                   |
 | `04_demo_redis.txt`    | **Demo**    | Các bước demo, dán vào **Redis Insight > Workbench**                                  |
+| `kich_ban_video.md`    | **Video**   | Kịch bản quay video demo: chuẩn bị, từng cảnh, lời thoại, kết quả mong đợi            |
 
 ## Cách dùng
 
