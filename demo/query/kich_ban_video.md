@@ -1,4 +1,4 @@
-# Kịch bản quay video: 4.3 Xử lý và tối ưu truy vấn (PostgreSQL và Redis)
+# Kịch bản quay video: 3.3 Xử lý và tối ưu truy vấn (PostgreSQL và Redis)
 
 Thời lượng dự kiến: **9–11 phút** (PostgreSQL ~6 phút, Redis ~4 phút). Cảnh đánh dấu _(tùy chọn)_ có thể bỏ nếu cần rút ngắn.
 File dùng khi quay: `03_demo_postgres.sql` (pgAdmin) và `04_demo_redis.txt` (Redis Insight > Workbench), cùng thư mục với file này.
@@ -27,7 +27,7 @@ Thao tác trong pgAdmin: **bôi đen** đúng đoạn của STEP rồi **F5**. C
 ## Cảnh 0. Mở đầu (~40 giây)
 
 - **Màn hình:** `README.md` của `demo/query` hoặc slide tiêu đề.
-- **Lời thoại:** "Phần 4.3 xem hai hệ xử lý một câu truy vấn thế nào. Dùng hai báo cáo của ứng dụng kho, lấy nguyên văn từ `ReportRepository`: hàng chậm luân chuyển (UC-08) và nhập – xuất – tồn (UC-09). Dữ liệu demo là một năm chứng từ: 10.000 phiếu nhập, 10.000 phiếu xuất, 200 lần kiểm kê, nằm riêng ở schema `qry_demo` và Redis database 13."
+- **Lời thoại:** "Phần 3.3 xem hai hệ xử lý một câu truy vấn thế nào. Dùng hai báo cáo của ứng dụng kho, lấy nguyên văn từ `ReportRepository`: hàng chậm luân chuyển (UC-08) và nhập – xuất – tồn (UC-09). Dữ liệu demo là một năm chứng từ: 10.000 phiếu nhập, 10.000 phiếu xuất, 200 lần kiểm kê, nằm riêng ở schema `qry_demo` và Redis database 13."
 
 ## Phần A. PostgreSQL (pgAdmin)
 

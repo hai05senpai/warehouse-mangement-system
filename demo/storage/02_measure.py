@@ -2,6 +2,7 @@
 
 Chạy tại thư mục gốc dự án (cần psycopg 3 và redis-py):
     set -a; source .env; set +a
+    python3 demo/storage/02_measure.py reset     # chỉ nạp lại dữ liệu demo (trước khi demo trong pgAdmin / Redis Insight)
     python3 demo/storage/02_measure.py load      # nạp dữ liệu, đo dung lượng, MVCC 500 lần, tốc độ
     python3 demo/storage/02_measure.py bloat     # 50.000 lượt cập nhật -> để lại bản ghi chết (chụp pgAdmin)
     python3 demo/storage/02_measure.py clean     # sau khi chạy VACUUM FULL trong pgAdmin: đo lại
@@ -89,21 +90,18 @@ END $$;"""
 WRITE_LOOP_ONE_TX = WRITE_LOOP.replace("    COMMIT;\n", "")
 
 
-def load():
-    data = {}
+def load_postgres():
+    """Chạy 01_load_postgres.sql: tạo lại schema storage_demo ở trạng thái ban đầu."""
     sql = (HERE / "01_load_postgres.sql").read_text()
     sql = "\n".join(l for l in sql.splitlines() if not l.startswith("\\"))
     with pg() as c:
         for stmt in sql.split(";\n"):  # từng lệnh riêng: VACUUM không chạy được trong khối giao dịch
             if stmt.strip() and not all(l.strip().startswith("--") or not l.strip() for l in stmt.splitlines()):
                 c.execute(stmt)
-        c.execute("ALTER TABLE storage_demo.inventory SET (autovacuum_enabled = false)")
-        one = c.execute("""SELECT pg_column_size(t.*) FROM storage_demo.inventory_one t""").fetchone()[0]
-        data["pg_one"] = {"row_bytes": one,
-                          "heap_bytes": c.execute("SELECT pg_relation_size('storage_demo.inventory_one')").fetchone()[0],
-                          "index_bytes": c.execute("SELECT pg_indexes_size('storage_demo.inventory_one')").fetchone()[0]}
-        data["pg_10k"] = stats(c)
 
+
+def load_redis():
+    """Nạp lại 10.000 HASH vào database 12 và cài các hàm Lua. Trả used_memory trước khi nạp."""
     R.flushdb()
     R.function_load((HERE / "redis_functions.lua").read_text(), replace=True)
     before = used_memory()
@@ -113,6 +111,28 @@ def load():
         pipe.hset(f"inv:{p}:{l}", mapping={"product_id": p, "location_id": l, "quantity": 100,
                                            "reserved_quantity": 0, "updated_at": "2026-11-26T10:00:00Z"})
     pipe.execute()
+    return before
+
+
+def reset():
+    """Đưa dữ liệu demo về trạng thái vừa nạp (dùng trước khi demo trong pgAdmin / Redis Insight)."""
+    load_postgres()
+    load_redis()
+    print("Da nap lai storage_demo (10.000 dong) va Redis database 12 (10.000 khoa).")
+
+
+def load():
+    data = {}
+    load_postgres()
+    with pg() as c:
+        c.execute("ALTER TABLE storage_demo.inventory SET (autovacuum_enabled = false)")
+        one = c.execute("""SELECT pg_column_size(t.*) FROM storage_demo.inventory_one t""").fetchone()[0]
+        data["pg_one"] = {"row_bytes": one,
+                          "heap_bytes": c.execute("SELECT pg_relation_size('storage_demo.inventory_one')").fetchone()[0],
+                          "index_bytes": c.execute("SELECT pg_indexes_size('storage_demo.inventory_one')").fetchone()[0]}
+        data["pg_10k"] = stats(c)
+
+    before = load_redis()
     data["redis_one"] = {"memory_usage": R.memory_usage("inv:1:1"), "encoding": R.object("encoding", "inv:1:1")}
     data["redis_10k"] = {"used_memory_delta": used_memory() - before, "keys": R.dbsize()}
 
@@ -174,4 +194,4 @@ def clean():
 
 
 if __name__ == "__main__":
-    {"load": load, "bloat": bloat, "clean": clean}[sys.argv[1]]()
+    {"reset": reset, "load": load, "bloat": bloat, "clean": clean}[sys.argv[1]]()

@@ -1,0 +1,35 @@
+// =============================================================================
+// DEMO LƯU TRỮ (mục 3.1) TRÊN REDIS: dán vào Redis Insight > Workbench (database 12)
+// Chạy từng lệnh. Yêu cầu: đã nạp dữ liệu bằng 02_measure.py load.
+// Các hàm FCALL nằm trong redis_functions.lua; mỗi hàm trả về
+//   1) số lệnh  2) tổng thời gian phía server  3) thời gian trung bình mỗi lệnh.
+// =============================================================================
+
+// STEP 1: Dữ liệu: mỗi dòng tồn kho là một HASH inv:{product_id}:{location_id} -----
+// DBSIZE phải ra 10000. Nếu ra số khác: bấm bút chì cạnh "db0" ở góc trên, đổi thành 12.
+DBSIZE
+HGETALL inv:1:1
+
+
+// STEP 2: Một khóa tốn bao nhiêu RAM -------------------------------------------
+// listpack: HASH nhỏ được nén liền trong một mảng byte. MEMORY USAGE khoảng 144 byte.
+OBJECT ENCODING inv:1:1
+MEMORY USAGE inv:1:1
+
+
+// STEP 3: 10.000 khóa tốn bao nhiêu RAM ----------------------------------------
+// Xem dòng used_memory; 02_measure.py đo phần tăng thêm khi nạp: khoảng 1,6 MB (161,6 byte mỗi khóa).
+INFO memory
+
+
+// STEP 4: Ghi đè 50.000 lượt: không có bản ghi chết -------------------------------
+FCALL s_overwrite 0 50000
+// Nhìn: khóa vẫn chiếm đúng 144 byte, vì HSET sửa tại chỗ.
+MEMORY USAGE inv:1:1
+
+
+// STEP 5: Thời gian đọc / ghi một dòng, đo ngay trong server -----------------------
+// Đọc 1.000 lần bằng HGETALL: khoảng 1,7 µs mỗi lệnh
+FCALL s_bench_read 0 1000
+// Ghi 1.000 lần bằng HSET: khoảng 0,3 µs mỗi lệnh
+FCALL s_bench_write 0 1000

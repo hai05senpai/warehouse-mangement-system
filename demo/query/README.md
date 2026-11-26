@@ -1,4 +1,4 @@
-# Demo xử lý và tối ưu truy vấn: PostgreSQL và Redis (mục 4.3)
+# Demo xử lý và tối ưu truy vấn: PostgreSQL và Redis (mục 3.3)
 
 Hai báo cáo của app trên một năm chứng từ: **hàng chậm luân chuyển (UC-08)** và **nhập - xuất - tồn (UC-09)**.
 
