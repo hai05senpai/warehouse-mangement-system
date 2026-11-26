@@ -1,0 +1,91 @@
+{
+  "pg_one": {
+    "row_bytes": 64,
+    "heap_bytes": 8192,
+    "index_bytes": 32768
+  },
+  "pg_10k": {
+    "heap_bytes": 688128,
+    "index_bytes": 581632,
+    "total_bytes": 1302528,
+    "dead_tuples": 0,
+    "live_rows": 10000
+  },
+  "redis_one": {
+    "memory_usage": 144,
+    "encoding": "listpack"
+  },
+  "redis_10k": {
+    "used_memory_delta": 1615584,
+    "keys": 10000
+  },
+  "mvcc_500": {
+    "ctid_before": "(0,1)",
+    "ctid_after": "(83,70)",
+    "pages_before": 84,
+    "pages_after": 84,
+    "dead_after": 30,
+    "dead_after_vacuum": 0,
+    "pages_after_vacuum": 84
+  },
+  "pg_10k_clean": {
+    "heap_bytes": 688128,
+    "index_bytes": 581632,
+    "total_bytes": 1269760,
+    "dead_tuples": 1016,
+    "live_rows": 10000
+  },
+  "speed_ms_per_1000": {
+    "pg_read": 10.368,
+    "pg_write": 666.322,
+    "pg_write_one_tx": 27.442,
+    "redis_read": 1.717,
+    "redis_write": 0.347,
+    "raw": {
+      "pg_read": [
+        6.945,
+        12.486,
+        10.368
+      ],
+      "pg_write": [
+        666.618,
+        665.003,
+        666.322
+      ],
+      "pg_write_one_tx": [
+        38.339,
+        27.442,
+        25.355
+      ],
+      "redis_read": [
+        1.717,
+        1.402,
+        2.098
+      ],
+      "redis_write": [
+        0.351,
+        0.343,
+        0.347
+      ]
+    }
+  },
+  "pg_after_50k": {
+    "heap_bytes": 4071424,
+    "index_bytes": 1212416,
+    "total_bytes": 5308416,
+    "dead_tuples": 50867,
+    "live_rows": 10000
+  },
+  "redis_after_50k": {
+    "used_memory_delta_vs_before_overwrite": 16896,
+    "memory_usage_inv_1_1": 144,
+    "used_memory_db_total_delta": 1632480
+  },
+  "pg_after_vacuum_full": {
+    "heap_bytes": 688128,
+    "index_bytes": 581632,
+    "total_bytes": 1269760,
+    "dead_tuples": 50676,
+    "live_rows": 10000
+  }
+}

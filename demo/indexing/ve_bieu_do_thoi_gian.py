@@ -1,4 +1,4 @@
-"""Vẽ docs/images/4_2_thoi_gian.png từ số liệu ở hai bảng mục 4.2 (docs/4.2_chi_muc.tex).
+"""Vẽ docs/DBMS_report/Images/4_2_thoi_gian.png từ số liệu ở hai bảng mục 3.2 của report.
 
 Chạy: python3 demo/indexing/ve_bieu_do_thoi_gian.py   (cần matplotlib)
 """
@@ -22,7 +22,7 @@ REDIS = [
     ("SKU chứa\n'0123'", 108.4, 4.0),
     ("Tồn thấp\n(250 dòng)", 184.9, 0.8),
 ]
-OUT = Path(__file__).resolve().parents[2] / "docs" / "images" / "4_2_thoi_gian.png"
+OUT = Path(__file__).resolve().parents[2] / "docs" / "DBMS_report" / "Images" / "4_2_thoi_gian.png"
 
 
 def fmt(v):

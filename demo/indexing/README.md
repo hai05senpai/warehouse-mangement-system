@@ -1,4 +1,4 @@
-# Demo chỉ mục: PostgreSQL và Redis (mục 4.2)
+# Demo chỉ mục: PostgreSQL và Redis (mục 3.2)
 
 Tra cứu tồn kho (UC-06) và cảnh báo tồn thấp (UC-07) trên **100.000 dòng tồn kho**:
 
@@ -112,4 +112,4 @@ Thời gian Redis đo bằng `os.clock()` bên trong hàm, gồm cả việc l�
 ## Lưu ý
 
 - Các hàm Redis dùng `KEYS` để mô phỏng "quét toàn bộ". Lệnh này chặn server, **chỉ dùng cho demo**, không dùng trong app.
-- Truy vấn demo viết lại từ `InventoryRepository.search` / `findLowStock` với giá trị cụ thể. App gửi tham số dạng `(:sku = '' OR ...)`; PostgreSQL rút gọn được điều kiện này ở các lần chạy đầu (custom plan), nhưng nếu chuyển sang generic plan thì có thể không dùng chỉ mục. Điểm này thuộc mục 4.3 (xử lý truy vấn).
+- Truy vấn demo viết lại từ `InventoryRepository.search` / `findLowStock` với giá trị cụ thể. App gửi tham số dạng `(:sku = '' OR ...)`; PostgreSQL rút gọn được điều kiện này ở các lần chạy đầu (custom plan), nhưng nếu chuyển sang generic plan thì có thể không dùng chỉ mục. Điểm này thuộc mục 3.3 (xử lý truy vấn).

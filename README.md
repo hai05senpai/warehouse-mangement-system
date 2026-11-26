@@ -19,6 +19,7 @@ dbms-logistic/
 │       └── data/             # Bộ script SQL dữ liệu mẫu (01 -> 12) + chỉ mục (13)
 ├── frontend/                 # Giao diện người dùng (React + TypeScript + Vite)
 │   └── src/                  # Pages, Components, API client
+├── demo/                     # Demo so sánh PostgreSQL và Redis cho report (chương 3)
 ├── docker-compose.yml        # Cấu hình container PostgreSQL 17 & Redis 7
 └── .env.example              # Tệp mẫu cấu hình biến môi trường
 ```
@@ -153,6 +154,21 @@ Khi khởi chạy Backend lần đầu, hệ thống tự động khởi tạo s
   ```powershell
   .\mvnw.cmd test "-Duser.timezone=UTC"
   ```
+
+---
+
+## Demo so sánh PostgreSQL và Redis
+
+Thư mục `demo/` chứa các demo dùng cho chương 3 của report. Mỗi demo có `README.md` riêng hướng dẫn nạp dữ liệu, chạy demo, đo lại số liệu và dọn dẹp, cùng `kich_ban_video.md` để quay video. Dữ liệu demo nằm ở schema và database Redis riêng nên không ảnh hưởng dữ liệu của app.
+
+| Mục report                    | Thư mục                                        | Schema PostgreSQL | Redis DB |
+| ----------------------------- | ---------------------------------------------- | ----------------- | -------- |
+| 3.1 Lưu trữ và quản lý dữ liệu | [`demo/storage`](demo/storage/README.md)        | `storage_demo`    | 12       |
+| 3.2 Chỉ mục                   | [`demo/indexing`](demo/indexing/README.md)      | `idx_demo`        | 15       |
+| 3.3 Xử lý và tối ưu truy vấn  | [`demo/query`](demo/query/README.md)            | `qry_demo`        | 13       |
+| 3.4 Giao dịch                 | [`demo/transaction`](demo/transaction/README.md) | `txn_demo`        | 14       |
+
+Script đo của `demo/storage` và `demo/query` viết bằng Python, cần `psycopg`, `redis`, `matplotlib`, và đọc URL cơ sở dữ liệu từ hai biến `DATABASE_PUBLIC_URL`, `REDIS_PUBLIC_URL`. Hai biến này không có trong `.env.example`, nên cần tự thêm vào `.env` trước khi chạy.
 
 ---
 

@@ -1,4 +1,4 @@
-"""Vẽ docs/images/4_3_thoi_gian.png từ số đo demo mục 4.3 (Railway, 26/11/2026, trung vị 3 lần).
+"""Vẽ docs/DBMS_report/Images/4_3_thoi_gian.png từ demo/query/results.json (mục 3.3).
 
 Chạy: python3 demo/query/ve_bieu_do_thoi_gian.py   (cần matplotlib)
 """
@@ -9,24 +9,29 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+import json
+
+D = json.loads((Path(__file__).parent / "results.json").read_text())  # tạo bằng 05_measure.py
+P, R = D["postgres_ms"], D["redis_ms"]
 # PostgreSQL: (nhóm, cách nhanh ms, cách chậm ms)
 POSTGRES = [
-    ("Nối 1 ngày\nNested Loop | ép Hash", 0.27, 4.85),
-    ("Nối cả năm\nHash Join | ép Nested Loop", 15.1, 40.9),
-    ("UC-09\nviết lại | câu của app", 47.7, 90.5),
-    ("Câu có tham số\ncustom | generic plan", 0.42, 4.47),
+    ("Nối 1 ngày\nNested Loop | ép Hash", P["join_1day"], P["forced_hash_1day"]),
+    ("Nối cả năm\nHash Join | ép Nested Loop", P["join_year"], P["forced_nested_year"]),
+    ("UC-09\nviết lại | câu của app", P["uc09_rewrite"], P["uc09_app"]),
+    ("Câu có tham số\ncustom | generic plan", P["param_custom"], P["param_generic"]),
 ]
 # UC-08 / UC-09 trên hai hệ: (nhóm, PostgreSQL, Redis bảng gộp, Redis hash viết tay, Redis nested loop ước tính)
 COMPARE = [
-    ("UC-08 hàng chậm\nluân chuyển", 52.5, 6.4, 144.0, 111942),
-    ("UC-09 nhập -\nxuất - tồn", 90.5, 7.6, 295.7, None),
+    ("UC-08 hàng chậm\nluân chuyển", P["uc08"], R["stagnant_agg"], R["stagnant_scan"], R["stagnant_nested_est_5000"]),
+    ("UC-09 nhập -\nxuất - tồn", P["uc09_app"], R["inout_agg"], R["inout_scan"], None),
 ]
-OUT = Path(__file__).resolve().parents[2] / "docs" / "images" / "4_3_thoi_gian.png"
+OUT = Path(__file__).resolve().parents[2] / "docs" / "DBMS_report" / "Images" / "4_3_thoi_gian.png"
 FAST, SLOW, PG, HASH, NEST = "#4f81bd", "#c0504d", "#7f7f7f", "#f79646", "#c0504d"
 
 
 def fmt(v):
-    return f"{v:,.0f}".replace(",", ".") if v >= 1000 else f"{v:g}".replace(".", ",")
+    s = f"{v:,.0f}" if v >= 1000 else (f"{v:.1f}" if v >= 1 else f"{v:.2f}")
+    return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 def label(ax, bars):

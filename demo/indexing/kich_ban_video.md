@@ -1,4 +1,4 @@
-# Kịch bản quay video: 4.2 Chỉ mục (PostgreSQL và Redis)
+# Kịch bản quay video: 3.2 Chỉ mục (PostgreSQL và Redis)
 
 Thời lượng dự kiến: **9–11 phút** (PostgreSQL ~6 phút, Redis ~4 phút). Cảnh đánh dấu _(tùy chọn)_ có thể bỏ nếu cần rút ngắn.
 File dùng khi quay: `03_demo_postgres.sql` (pgAdmin) và `04_demo_redis.txt` (Redis Insight > Workbench), cùng thư mục với file này.
@@ -27,7 +27,7 @@ Thao tác trong pgAdmin: **bôi đen** đúng đoạn của STEP rồi **F5**. V
 ## Cảnh 0. Mở đầu (~30 giây)
 
 - **Màn hình:** slide tiêu đề hoặc file `README.md` của `demo/indexing`.
-- **Lời thoại:** "Phần 4.2 so sánh chỉ mục trên PostgreSQL và Redis. Hai truy vấn lấy từ ứng dụng kho: tra tồn theo khu (UC-06) và cảnh báo tồn thấp (UC-07). Dữ liệu demo nằm riêng, schema `idx_demo` trên PostgreSQL và database 15 trên Redis, không ảnh hưởng dữ liệu thật."
+- **Lời thoại:** "Phần 3.2 so sánh chỉ mục trên PostgreSQL và Redis. Hai truy vấn lấy từ ứng dụng kho: tra tồn theo khu (UC-06) và cảnh báo tồn thấp (UC-07). Dữ liệu demo nằm riêng, schema `idx_demo` trên PostgreSQL và database 15 trên Redis, không ảnh hưởng dữ liệu thật."
 
 ## Phần A. PostgreSQL (pgAdmin)
 
