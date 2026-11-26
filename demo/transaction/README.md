@@ -12,10 +12,13 @@ Dữ liệu demo nằm riêng (schema `txn_demo` trên PostgreSQL, database `14`
 | File                    | Loại         | Dùng để                                                       |
 | ----------------------- | ------------ | ------------------------------------------------------------- |
 | `01_setup_data.sql`     | Nạp dữ liệu | Tạo schema `txn_demo` + bảng + dữ liệu mẫu trên PostgreSQL  |
-| `02_demo_postgres.sql`  | **Demo**     | 8 bước demo, mở trong **pgAdmin**                             |
+| `02_demo_postgres.sql`  | **Demo**     | 9 bước demo, mở trong **pgAdmin**                             |
 | `03_setup_redis.sh`     | Nạp dữ liệu | Nạp dữ liệu tương đương vào Redis database 14 + Lua functions |
 | `redis_functions.lua`   | Code         | Lua functions: nhập/xuất/điều chuyển atomic trên Redis        |
-| `04_demo_redis.txt`     | **Demo**     | 10 bước demo, dán vào **Redis Insight > Workbench**           |
+| `04_demo_redis.txt`     | **Demo**     | 11 bước demo, dán vào **Redis Insight > Workbench**           |
+| `05_render_images.py`  | Ảnh báo cáo  | Chạy thật các bước demo, vẽ kết quả ra `image/*.png`          |
+| `06_benchmark.py`      | Đo thời gian | Thời gian giao dịch, độ bền, đồng thời + EXPLAIN → `image/`   |
+| `bao_cao_3.4.tex`      | Báo cáo      | Mục 3.4 Giao dịch (LaTeX), dùng ảnh trong `image/`            |
 
 ## Cách dùng
 
@@ -56,7 +59,7 @@ docker exec logistic-redis redis-cli FUNCTION DELETE txn_demo
 
 ## Nội dung demo
 
-### PostgreSQL (8 bước)
+### PostgreSQL (9 bước)
 
 | Step | Nội dung                                   | Minh họa                                                            |
 | ---- | ------------------------------------------ | ------------------------------------------------------------------- |
@@ -68,8 +71,9 @@ docker exec logistic-redis redis-cli FUNCTION DELETE txn_demo
 | 6    | Read Committed — isolation mặc định        | Session B không thấy thay đổi chưa commit của Session A             |
 | 7    | Repeatable Read — chống Phantom Read       | Cùng 1 query trả kết quả giống nhau suốt transaction                |
 | 8    | Serializable — phát hiện xung đột ghi      | 2 session cùng đọc-ghi → PostgreSQL abort 1 session                 |
+| 9    | Phiếu xuất 2 dòng, dòng 2 thiếu hàng       | `reserved_quantity <= quantity` chặn dòng 2 → hủy cả phiếu và dòng 1 |
 
-### Redis (10 bước)
+### Redis (11 bước)
 
 | Step | Nội dung                                   | Minh họa                                                            |
 | ---- | ------------------------------------------ | ------------------------------------------------------------------- |
@@ -82,7 +86,8 @@ docker exec logistic-redis redis-cli FUNCTION DELETE txn_demo
 | 7    | Lua điều chuyển — trừ nguồn + cộng đích    | FCALL transfer_stock: atomic trên 2 key                             |
 | 8    | WATCH/MULTI — Optimistic locking           | Key bị sửa giữa WATCH và EXEC → giao dịch bị hủy                  |
 | 9    | So sánh MULTI vs Lua                       | MULTI trừ bừa → âm; Lua kiểm tra → từ chối                        |
-| 10   | Reset dữ liệu                             | FLUSHDB                                                             |
+| 10   | Lỗi lúc chạy trong MULTI — không rollback | Lệnh 1 vẫn có hiệu lực khi lệnh 2 lỗi; lỗi cú pháp → EXECABORT      |
+| 11   | Reset dữ liệu                             | FLUSHDB                                                             |
 
 ## Bảng so sánh
 

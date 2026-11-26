@@ -3,6 +3,7 @@ package com.logistic.backend.controller;
 import com.logistic.backend.dto.TransferRequest;
 import com.logistic.backend.entity.Inventory;
 import com.logistic.backend.entity.StockTransfer;
+import com.logistic.backend.entity.StockTransferItem;
 import com.logistic.backend.entity.Location;
 import com.logistic.backend.repository.LocationRepository;
 import com.logistic.backend.repository.ProductRepository;
@@ -27,6 +28,8 @@ public class InventoryController {
                                   @RequestParam(defaultValue = "false") boolean availableOnly) {
         return service.search(sku, zone, availableOnly);
     }
+    @GetMapping("/transfers") public List<StockTransfer> transfers() { return service.listTransfers(); }
+    @GetMapping("/transfers/{id}/items") public List<StockTransferItem> transferItems(@PathVariable Long id) { return service.transferItems(id); }
     @PostMapping("/transfers") @ResponseStatus(HttpStatus.CREATED)
     public StockTransfer transfer(@RequestBody TransferRequest request) { return service.transfer(request); }
     @GetMapping("/locations") public List<Location> locations() { return locations.findAll(); }

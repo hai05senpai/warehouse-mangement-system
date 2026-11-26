@@ -31,6 +31,11 @@ public class ReceiptService {
 
     public List<ReceiptOrder> list() { return orders.findAllWithSupplier(); }
 
+    public List<ReceiptItem> items(Long id) {
+        if (!orders.existsById(id)) throw new IllegalArgumentException("Receipt order not found");
+        return items.findDetailsByReceiptOrderId(id);
+    }
+
     @Transactional
     @CacheEvict(cacheNames = CacheConfig.STOCK_REPORT, allEntries = true)
     public ReceiptOrder create(ReceiptRequest request) {

@@ -56,6 +56,8 @@ CREATE TABLE inventory (
     quantity          INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
     reserved_quantity INT NOT NULL DEFAULT 0 CHECK (reserved_quantity >= 0),
     updated_at        TIMESTAMPTZ DEFAULT now(),
+    -- BR-02: 0 <= lượng đã giữ <= tồn thực tế
+    CONSTRAINT inventory_reserved_le_quantity CHECK (reserved_quantity <= quantity),
     UNIQUE (product_id, location_id)
 );
 

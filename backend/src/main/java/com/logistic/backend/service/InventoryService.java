@@ -27,6 +27,13 @@ public class InventoryService {
         this.transferItems = transferItems;
     }
 
+    public List<StockTransfer> listTransfers() { return transfers.findAllByOrderByTransferDateDescIdDesc(); }
+
+    public List<StockTransferItem> transferItems(Long id) {
+        if (!transfers.existsById(id)) throw new IllegalArgumentException("Stock transfer not found");
+        return transferItems.findDetailsByTransferId(id);
+    }
+
     public List<Inventory> search(String sku, String zone, boolean availableOnly) {
         return inventory.search(blankToEmpty(sku), blankToEmpty(zone), availableOnly);
     }
