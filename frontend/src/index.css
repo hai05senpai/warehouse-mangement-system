@@ -1458,3 +1458,10 @@ tbody tr:hover .action-cell {
     scroll-behavior: auto !important;
   }
 }
+
+/* Báo cáo nhập–xuất–tồn: dòng tóm tắt số mặt hàng có phát sinh */
+.report-note {
+  margin: 0 0 10px;
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+}

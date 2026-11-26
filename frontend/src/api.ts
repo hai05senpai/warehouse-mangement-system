@@ -81,6 +81,8 @@ export function errorMessage(error: unknown): string {
       'Receipt order not found': 'Không tìm thấy phiếu nhập kho.',
       'Stock take order not found': 'Không tìm thấy phiếu kiểm kê.',
       'Stock transfer not found': 'Không tìm thấy phiếu điều chuyển.',
+      'start and end are required and start must be before end': 'Vui lòng chọn đủ ngày; "Từ ngày" phải trước "Đến ngày".',
+      'start must be before end': '"Từ ngày" phải trước "Đến ngày".',
       'Inventory item not found': 'Không tìm thấy tồn kho tại vị trí này.',
       'Source inventory not found': 'Không tìm thấy tồn kho tại vị trí nguồn.',
       'Only pending receipt orders can be completed': 'Chỉ có thể hoàn tất phiếu nhập đang chờ xử lý.',
