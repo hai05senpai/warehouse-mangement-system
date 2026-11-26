@@ -16,6 +16,7 @@ Dữ liệu demo nằm riêng (schema `qry_demo` trên PostgreSQL, database `13`
 | `redis_functions.lua`  | Code        | Hai báo cáo viết tay trên Redis: quét + nối thủ công, bảng gộp tính sẵn, chi phí khi ghi   |
 | `03_demo_postgres.sql` | **Demo**    | 7 bước demo, mở trong **pgAdmin**                                                          |
 | `04_demo_redis.txt`    | **Demo**    | 6 bước demo, dán vào **Redis Insight > Workbench**                                         |
+| `05_measure.py`        | Đo          | Đo lại toàn bộ demo trên máy chủ (6 lần, bỏ lần đầu, trung vị) → `results.json`            |
 | `kich_ban_video.md`    | **Video**   | Kịch bản quay video demo: chuẩn bị, từng cảnh, lời thoại, kết quả mong đợi                |
 
 ## Cách dùng
@@ -77,9 +78,9 @@ Demo có thêm chỉ mục trên khóa ngoại và ngày chứng từ (`issue_it
 | Nối cả năm: Hash Join (ép Nested Loop)               | ~5 (~12)                                               |                                           |
 | Câu có tham số: custom plan / generic plan           | ~0,1 / ~2                                              |                                           |
 
-Trên **Railway** (PostgreSQL 18.7 / Redis 8.2, đo ngày 26/11/2026, trung vị 3 lần; đã nạp sẵn dữ liệu): kế hoạch thực thi giống hệt Docker, thời gian chậm hơn ~2–3 lần.
-PostgreSQL: UC-08 ~52; UC-09 ~90 → ~48 khi viết lại; nối 1 ngày ~0,3 (ép Hash Join ~5); nối cả năm ~15 (ép Nested Loop ~41); custom / generic plan ~0,4 / ~4,5.
-Redis: UC-08 quét ~145, nested loop ~450 cho 20 mặt hàng (ước tính ~110.000 cho 5.000), UC-09 quét ~295, dựng bảng gộp ~440, UC-08 / UC-09 từ bảng gộp ~6,4 / ~7,6.
+Trên **Railway** (PostgreSQL 18.7 / Redis 8.2; 6 lần, bỏ lần đầu, lấy trung vị, đo bằng `05_measure.py`, kết quả trong `results.json`): kế hoạch thực thi giống hệt Docker, thời gian chậm hơn ~2–4 lần.
+PostgreSQL: UC-08 ~74; UC-09 ~100 → ~57 khi viết lại; nối 1 ngày ~0,3 (ép Hash Join ~7); nối cả năm ~19 (ép Nested Loop ~56); custom / generic plan ~0,45 / ~6.
+Redis: UC-08 quét ~128, nested loop ~415 cho 20 mặt hàng (ước tính ~104.000 cho 5.000), UC-09 quét ~290, dựng bảng gộp ~400, UC-08 / UC-09 từ bảng gộp ~8 / ~12.
 
 Hai hệ cho **cùng kết quả**: 1.582 mặt hàng chậm luân chuyển; dòng mẫu UC-09 `AC-00005`: đầu kỳ 466, nhập 31, xuất 29, điều chỉnh 0, cuối kỳ 468.
 Số liệu thay đổi theo máy và giữa các lần chạy; khi trình bày nhấn vào **loại phép nối** và **số block** (`Buffers`), thời gian chỉ là phụ.

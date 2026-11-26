@@ -1,0 +1,168 @@
+{
+  "method": "6 lan, bo lan dau, lay trung vi",
+  "postgres_ms": {
+    "uc08": 73.742,
+    "join_1day": 0.313,
+    "join_year": 19.423,
+    "join_merge": 31.572,
+    "forced_hash_1day": 7.044,
+    "forced_nested_year": 56.395,
+    "uc09_app": 99.754,
+    "uc09_rewrite": 56.612,
+    "param_custom": 0.445,
+    "param_generic": 5.995
+  },
+  "postgres_buffers": {
+    "uc08": 10239,
+    "join_1day": 149,
+    "join_year": 344,
+    "join_merge": 30140,
+    "forced_hash_1day": 284,
+    "forced_nested_year": 30260,
+    "uc09_app": 1743,
+    "uc09_rewrite": 971,
+    "param_custom": 262,
+    "param_generic": 297
+  },
+  "redis_ms": {
+    "stagnant_scan": 128.48,
+    "stagnant_nested_20": 415.554,
+    "stagnant_nested_est_5000": 103888.49999999999,
+    "inout_scan": 289.745,
+    "build_agg": 399.332,
+    "stagnant_agg": 7.924,
+    "inout_agg": 11.937
+  },
+  "raw": {
+    "postgres": [
+      {
+        "uc08": 87.09,
+        "join_1day": 0.339,
+        "join_year": 40.521,
+        "join_merge": 64.453,
+        "forced_hash_1day": 20.775,
+        "forced_nested_year": 69.585,
+        "uc09_app": 84.845,
+        "uc09_rewrite": 67.778,
+        "param_custom": 0.593,
+        "param_generic": 8.118
+      },
+      {
+        "uc08": 73.591,
+        "join_1day": 0.915,
+        "join_year": 24.65,
+        "join_merge": 31.638,
+        "forced_hash_1day": 6.317,
+        "forced_nested_year": 56.395,
+        "uc09_app": 108.227,
+        "uc09_rewrite": 61.743,
+        "param_custom": 0.607,
+        "param_generic": 5.995
+      },
+      {
+        "uc08": 73.742,
+        "join_1day": 0.307,
+        "join_year": 26.164,
+        "join_merge": 34.562,
+        "forced_hash_1day": 10.112,
+        "forced_nested_year": 51.039,
+        "uc09_app": 84.116,
+        "uc09_rewrite": 56.612,
+        "param_custom": 0.361,
+        "param_generic": 6.172
+      },
+      {
+        "uc08": 86.558,
+        "join_1day": 1.783,
+        "join_year": 19.423,
+        "join_merge": 29.682,
+        "forced_hash_1day": 7.044,
+        "forced_nested_year": 61.249,
+        "uc09_app": 88.75,
+        "uc09_rewrite": 57.106,
+        "param_custom": 0.445,
+        "param_generic": 5.33
+      },
+      {
+        "uc08": 73.431,
+        "join_1day": 0.284,
+        "join_year": 17.785,
+        "join_merge": 28.403,
+        "forced_hash_1day": 13.826,
+        "forced_nested_year": 56.516,
+        "uc09_app": 99.754,
+        "uc09_rewrite": 54.343,
+        "param_custom": 0.435,
+        "param_generic": 8.566
+      },
+      {
+        "uc08": 78.336,
+        "join_1day": 0.313,
+        "join_year": 16.176,
+        "join_merge": 31.572,
+        "forced_hash_1day": 5.925,
+        "forced_nested_year": 45.624,
+        "uc09_app": 104.262,
+        "uc09_rewrite": 55.636,
+        "param_custom": 0.445,
+        "param_generic": 5.149
+      }
+    ],
+    "redis": [
+      {
+        "stagnant_scan": 159.745,
+        "stagnant_nested_20": 423.282,
+        "stagnant_nested_est_5000": 105820.5,
+        "inout_scan": 332.412,
+        "build_agg": 369.079,
+        "stagnant_agg": 11.593,
+        "inout_agg": 19.643
+      },
+      {
+        "stagnant_scan": 172.39,
+        "stagnant_nested_20": 532.578,
+        "stagnant_nested_est_5000": 133144.5,
+        "inout_scan": 373.158,
+        "build_agg": 531.572,
+        "stagnant_agg": 5.939,
+        "inout_agg": 9.343
+      },
+      {
+        "stagnant_scan": 106.285,
+        "stagnant_nested_20": 397.094,
+        "stagnant_nested_est_5000": 99273.5,
+        "inout_scan": 311.898,
+        "build_agg": 399.332,
+        "stagnant_agg": 7.924,
+        "inout_agg": 11.937
+      },
+      {
+        "stagnant_scan": 128.48,
+        "stagnant_nested_20": 413.441,
+        "stagnant_nested_est_5000": 103360.24999999999,
+        "inout_scan": 272.899,
+        "build_agg": 461.378,
+        "stagnant_agg": 6.854,
+        "inout_agg": 11.557
+      },
+      {
+        "stagnant_scan": 106.881,
+        "stagnant_nested_20": 415.554,
+        "stagnant_nested_est_5000": 103888.49999999999,
+        "inout_scan": 289.745,
+        "build_agg": 392.444,
+        "stagnant_agg": 8.798,
+        "inout_agg": 15.964
+      },
+      {
+        "stagnant_scan": 138.074,
+        "stagnant_nested_20": 469.869,
+        "stagnant_nested_est_5000": 117467.25,
+        "inout_scan": 267.616,
+        "build_agg": 382.901,
+        "stagnant_agg": 10.964,
+        "inout_agg": 14.436
+      }
+    ]
+  }
+}
